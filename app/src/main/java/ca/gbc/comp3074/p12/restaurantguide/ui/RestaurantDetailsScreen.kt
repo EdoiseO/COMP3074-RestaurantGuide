@@ -62,6 +62,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import ca.gbc.comp3074.p12.restaurantguide.R
 import ca.gbc.comp3074.p12.restaurantguide.data.Restaurant
 
@@ -227,17 +228,28 @@ fun RestaurantDetailsScreen(
         }
     }
     if (deleteOpen) {
-        AlertDialog(
-            onDismissRequest = { deleteOpen = false }, shape = RoundedCornerShape(24.dp), containerColor = Color.White,
-            title = { Text(stringResource(R.string.details_delete_title), Modifier.fillMaxWidth(),
-                textAlign = TextAlign.Center, fontSize = 18.sp, fontWeight = FontWeight.Bold) },
-            text = { Text(stringResource(R.string.details_delete_body), Modifier.fillMaxWidth(),
-                textAlign = TextAlign.Center, fontSize = 14.sp, lineHeight = 20.sp) },
-            dismissButton = { TextButton(onClick = { deleteOpen = false }) { Text(stringResource(R.string.details_cancel)) } },
-            confirmButton = { TextButton(onClick = onDelete, modifier = Modifier.testTag("confirm-delete")) {
-                Text(stringResource(R.string.details_delete), color = MaterialTheme.colorScheme.error)
-            } },
-        )
+        Dialog(onDismissRequest = { deleteOpen = false }) {
+            Surface(Modifier.fillMaxWidth(), shape = RoundedCornerShape(24.dp), color = Color.White) {
+                Column(
+                    Modifier.padding(24.dp),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    Text(stringResource(R.string.details_delete_title), Modifier.fillMaxWidth().semantics { heading() },
+                        textAlign = TextAlign.Center, fontSize = 18.sp, lineHeight = 24.sp, fontWeight = FontWeight.Bold)
+                    Text(stringResource(R.string.details_delete_body), Modifier.fillMaxWidth(),
+                        textAlign = TextAlign.Center, fontSize = 14.sp, lineHeight = 20.sp)
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                        TextButton(onClick = { deleteOpen = false }, modifier = Modifier.weight(1f).heightIn(min = 48.dp)) {
+                            Text(stringResource(R.string.details_cancel))
+                        }
+                        TextButton(onClick = onDelete, modifier = Modifier.weight(1f).heightIn(min = 48.dp).testTag("confirm-delete")) {
+                            Text(stringResource(R.string.details_delete), color = MaterialTheme.colorScheme.error)
+                        }
+                    }
+                }
+            }
+        }
     }
     if (notesOpen) {
         NotesEditor(restaurant.notes, onDismiss = { notesOpen = false }, onSave = {
