@@ -31,6 +31,18 @@ Runtime uses the read-only lightweight Pixel_7/API 37.1 fixture, 412×940dp, 1.5
 
 [Build receipt](../../../outputs/2026-10-10-add-restaurant/build-receipt.json) · [Runtime and cleanup](../../../outputs/2026-10-10-add-restaurant/runtime-receipt.json) · [Completion receipt](../../../outputs/2026-10-10-add-restaurant/completion-receipt.json)
 
+## Rating spacing follow-up — October 10
+
+On the student's annotated screenshot request, centered **Slide your finger across the stars.** and replaced the rating AlertDialog's default section spacing with a flexible, scrollable native Dialog column. Keeps exact wording, white surface, purple actions, rounded corners and the same half-star draft/Save/Cancel callbacks. The number-to-actions gap is **8dp**, outer vertical padding is **16dp**, stars remain **220×48dp** and actions retain **48dp** targets. Guidance explicitly retains bodyMedium typography and centers wrapped lines.
+
+Fresh debug app/test builds and the **one existing `completeAddAndEditRetainHalfStarsAndAllFields` device test passed**. It covers half-star drag Save/Cancel, full Add/Edit, restoration and tag deduplication/removal; the earlier 32-unit/18-device suite was not rerun for this layout follow-up. Production MainActivity native drag selected **4.5 / 5**. UI bounds confirm a **320×248dp** dialog, centered guidance/stars/value at **x412px**, and the **8dp** value-to-actions gap. Independent source and capture review found no clipping.
+
+Also captured the existing **+ Add tag** popup for the student's preview request. It displays **Add tag**, a rounded **Tag** field, **Cancel** and **Add**. Empty Add is disabled; entering **Cafe** enables it, and Add creates the removable Cafe chip in the draft. Keyboard-visible capture keeps actions accessible. The tag implementation is unchanged.
+
+The first cold-guest native UI dump timed out before tests and was archived separately; its guest was stopped. The successful read-only API37.1 fixture waited before three clean startup observations. No application fatal exception/ANR appears in saved logs. Owned emulator stopped immediately after captures; fresh readback confirms **PID 73073** and **emulator-5558** absent. No physical/minimum-API/large-font runtime claim. No Figma/shared Doc/submission edits or push.
+
+[Updated rating](../../../outputs/2026-10-10-rating-dialog-spacing/production-rating-dialog.png) · [Empty Add tag](../../../outputs/2026-10-10-rating-dialog-spacing/production-add-tag-empty.png) · [Filled Add tag](../../../outputs/2026-10-10-rating-dialog-spacing/production-add-tag-filled.png) · [Keyboard](../../../outputs/2026-10-10-rating-dialog-spacing/production-add-tag-typing.png) · [Added tag](../../../outputs/2026-10-10-rating-dialog-spacing/production-tag-added.png) · [Spacing readback](../../../outputs/2026-10-10-rating-dialog-spacing/spacing-verification.json) · [Build](../../../outputs/2026-10-10-rating-dialog-spacing/build-receipt.json) · [Runtime](../../../outputs/2026-10-10-rating-dialog-spacing/runtime-receipt.json) · [Fresh cleanup](../../../outputs/2026-10-10-rating-dialog-spacing/cleanup-readback.json)
+
 ## Remaining boundary
 
 Durable Room/SQLite storage and persistent photo access, live Maps/geocoding, app-obtained location/permission-denied handling, actual email-client composition and successful external directions remain later integration work. Gallery zoom is optional later work. The saved original requirement transcription still says integer rating; the explicit later user request authorizes the half-star UI/model implemented here.

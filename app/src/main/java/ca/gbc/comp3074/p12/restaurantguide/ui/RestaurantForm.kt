@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -58,12 +59,14 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Dialog
 import ca.gbc.comp3074.p12.restaurantguide.R
 import ca.gbc.comp3074.p12.restaurantguide.data.Restaurant
 import ca.gbc.comp3074.p12.restaurantguide.data.formatRating
@@ -243,16 +246,25 @@ fun RestaurantFormEntry(restaurant: Restaurant? = null, onBack: () -> Unit, onSa
         showTags = false
     })
     if (showAddress) AddressEntryDialog(address, onDismiss = { showAddress = false }, onSave = { address = it; showAddress = false })
-    if (showRating) AlertDialog(onDismissRequest = { showRating = false }, shape = RoundedCornerShape(24.dp), containerColor = Color.White,
-        title = { Text(stringResource(R.string.destination_your_rating), fontSize = 18.sp, fontWeight = FontWeight.Bold) },
-        text = {
-            Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text(stringResource(R.string.form_rating_guidance), color = Color.Black)
+    if (showRating) Dialog(onDismissRequest = { showRating = false }) {
+        Surface(Modifier.fillMaxWidth().testTag("rating-dialog"), shape = RoundedCornerShape(24.dp), color = Color.White) {
+            Column(Modifier.verticalScroll(rememberScrollState()).padding(horizontal = 24.dp, vertical = 16.dp)) {
+                Text(stringResource(R.string.destination_your_rating), fontSize = 18.sp, lineHeight = 24.sp, fontWeight = FontWeight.Bold)
+                Spacer(Modifier.height(12.dp))
+                Text(stringResource(R.string.form_rating_guidance), Modifier.fillMaxWidth(), color = Color.Black,
+                    style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center)
+                Spacer(Modifier.height(12.dp))
                 StarRating(ratingDraft, { ratingDraft = it }, Modifier.align(Alignment.CenterHorizontally).testTag("rating-swipe-stars"), starSize = 44.dp)
-                Text("${formatRating(ratingDraft)} / 5", Modifier.align(Alignment.CenterHorizontally).testTag("rating-draft-value"), fontSize = 28.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                Spacer(Modifier.height(8.dp))
+                Text("${formatRating(ratingDraft)} / 5", Modifier.align(Alignment.CenterHorizontally).testTag("rating-draft-value"),
+                    fontSize = 28.sp, lineHeight = 36.sp, fontWeight = FontWeight.Bold, color = Color.Black)
+                Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)) {
+                    TextButton(onClick = { showRating = false }, modifier = Modifier.heightIn(min = 48.dp)) { Text(stringResource(R.string.details_cancel)) }
+                    TextButton(onClick = { rating = ratingDraft; showRating = false }, modifier = Modifier.heightIn(min = 48.dp).testTag("rating-save")) { Text(stringResource(R.string.destination_save)) }
+                }
             }
-        }, dismissButton = { TextButton(onClick = { showRating = false }) { Text(stringResource(R.string.details_cancel)) } },
-        confirmButton = { TextButton(onClick = { rating = ratingDraft; showRating = false }, Modifier.testTag("rating-save")) { Text(stringResource(R.string.destination_save)) } })
+        }
+    }
 }
 
 @Composable
