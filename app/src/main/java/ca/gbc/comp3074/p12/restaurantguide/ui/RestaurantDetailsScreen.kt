@@ -100,7 +100,7 @@ fun RestaurantDetailsScreen(
     Scaffold { safePadding ->
         Column(Modifier.fillMaxSize().padding(safePadding).testTag("restaurant-details")) {
             Row(
-                Modifier.fillMaxWidth().height(66.dp).padding(horizontal = 8.dp),
+                Modifier.fillMaxWidth().height(48.dp).padding(horizontal = 8.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 TextButton(onClick = onBack) { Text(stringResource(R.string.destination_back), fontSize = 16.sp) }
