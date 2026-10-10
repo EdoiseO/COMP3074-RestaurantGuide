@@ -69,36 +69,35 @@
   },
   "video": {
     "path": "Restaurant-Guide-UI-Prototype.mp4",
-    "sha256": "aeed5726ba4c29bab137ba4a8ea00ea01211b8e841f188a7cb5a6a50e9eea7cb",
-    "duration_seconds": 298.255521,
-    "size_bytes": 6975429,
+    "sha256": "9e2a5a4b732ea195f198db33ac123fb00abc1306e59abb974e66143aa5afb171",
+    "duration_seconds": 298.234,
+    "size_bytes": 5345270,
     "dimensions": [
       1920,
       1080
     ],
     "video_codec": "h264",
     "frame_rate": "30/1",
-    "audio_codec": "aac",
-    "sample_rate": "48000",
+    "audio_streams": 0,
+    "subtitle_streams": 0,
+    "voiceover": false,
+    "on_screen_transcript": false,
     "chapters": 12,
+    "chapter_markers_unchanged": true,
     "native_playback_speed": 1.5,
-    "narration_truncated": false,
     "full_decode_passed": true,
-    "audio_levels": {
-      "mean_volume_db": "-21.5",
-      "max_volume_db": "-3.6"
-    },
-    "synthetic_narration": true,
-    "voice": "local macOS Samantha",
-    "speaker_is_team_member": false,
-    "manual_listening_review": false,
-    "visual_review_scope": "Sampled rendered chapters and supporting native captures; exact four About names, zoom/reset, keyboard, validation, email fallback, Delete/empty and clean cut endpoints reviewed.",
-    "independent_visual_review": "passed; hash bound to final MP4"
-  },
-  "narration": {
-    "words": 328,
-    "speech_seconds": 146.574919,
-    "rate_words_per_minute": 150
+    "chapter_explanations_retained": true,
+    "native_app_viewport_retained": true,
+    "visual_review_scope": "All twelve chapter samples; transcript box and prior narration footer removed, chapter explanations and native app footage preserved.",
+    "independent_visual_review": {
+      "status": "passed",
+      "sha256": "9e2a5a4b732ea195f198db33ac123fb00abc1306e59abb974e66143aa5afb171",
+      "chapters_sampled": 12,
+      "scope": "One sample 4 seconds after each of the 12 chapter starts, plus full-resolution About and Gallery frames; sampled review, not a full playback review.",
+      "no_transcript_text_or_box": true,
+      "no_background_patch_seam": true,
+      "native_ui_and_explanations_retained": true
+    }
   },
   "recording": {
     "source": "production MainActivity, four separately recorded guest sessions",
@@ -130,7 +129,8 @@
   },
   "cleanup": {
     "owned_emulator_stopped": true,
-    "shared_adb_preserved": true
+    "shared_adb_preserved": true,
+    "emulator_started_for_media_revision": false
   },
   "capture_limitation": "Compact/large-text test screenshots and fresh picker JSON were not exported; assertions and passing instrumentation are retained. Default production and rendered images were retained and reviewed.",
   "functional_boundary": [
@@ -139,5 +139,21 @@
     "email draft and no-handler fallback",
     "durable storage/photo access, live Maps/current location, permissions and real external handoff success remain later work"
   ],
-  "school_submission": false
+  "school_submission": false,
+  "separate_transcript": {
+    "path": "narration.txt",
+    "words": 328,
+    "sha256": "cb342c25b23e0371f267f42e26856cf45f23e73a47ab71308505bf67a8bfc964",
+    "included_in_video": false,
+    "timing_file": "narration.srt",
+    "retained_as_requested": true
+  },
+  "media_revision": {
+    "request": "Remove on-screen transcript and voiceover",
+    "date": "2026-10-10",
+    "app_source_changed": false,
+    "app_tests_rerun": false,
+    "prior_app_checkpoint_retained": true,
+    "original_export_sha256": "aeed5726ba4c29bab137ba4a8ea00ea01211b8e841f188a7cb5a6a50e9eea7cb"
+  }
 }
