@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="rating_control_label">Your rating</string>
+    <string name="rating_display_label">Rating</string>
+    <string name="rating_unrated">Not rated</string>
+    <string name="rating_accessible_value">%1$s out of 5 stars</string>
+</resources>

@@ -35,87 +35,8 @@ import ca.gbc.comp3074.p12.restaurantguide.R
 import java.util.Locale
 
 @Composable
-fun AddRestaurantEntry(
-    onBack: () -> Unit,
-    onSave: (name: String, description: String, tags: List<String>, rating: Int) -> Unit,
-) {
-    var name by rememberSaveable { mutableStateOf("") }
-    var description by rememberSaveable { mutableStateOf("") }
-    var tags by rememberSaveable { mutableStateOf("") }
-    var rating by rememberSaveable { mutableIntStateOf(1) }
-    var nameError by rememberSaveable { mutableStateOf(false) }
-
-    ListDestination(
-        title = stringResource(R.string.destination_add_title),
-        onBack = onBack,
-        action = {
-            TextButton(onClick = {
-                nameError = name.isBlank()
-                if (!nameError) {
-                    val parsedTags = tags.split(',')
-                        .map(String::trim)
-                        .filter(String::isNotEmpty)
-                        .distinctBy { it.lowercase(Locale.ROOT) }
-                    onSave(name.trim(), description.trim(), parsedTags, rating)
-                }
-            }) {
-                Text(stringResource(R.string.destination_save))
-            }
-        },
-    ) {
-        OutlinedTextField(
-            value = name,
-            onValueChange = {
-                name = it
-                if (it.isNotBlank()) nameError = false
-            },
-            label = { Text(stringResource(R.string.destination_restaurant_name)) },
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(12.dp),
-            singleLine = true,
-            isError = nameError,
-            supportingText = if (nameError) {
-                { Text(stringResource(R.string.destination_name_required)) }
-            } else {
-                null
-            },
-            keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words),
-        )
-        OutlinedTextField(
-            value = description,
-            onValueChange = { description = it },
-            label = { Text(stringResource(R.string.destination_description)) },
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(12.dp),
-            minLines = 3,
-            keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
-        )
-        OutlinedTextField(
-            value = tags,
-            onValueChange = { tags = it },
-            label = { Text(stringResource(R.string.destination_tags)) },
-            supportingText = { Text(stringResource(R.string.destination_tags_help)) },
-            modifier = Modifier.fillMaxWidth(),
-            shape = RoundedCornerShape(12.dp),
-            keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words),
-        )
-        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            Text(
-                text = stringResource(R.string.destination_your_rating),
-                style = MaterialTheme.typography.titleMedium,
-                color = MaterialTheme.colorScheme.primary,
-            )
-            Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                (1..5).forEach { value ->
-                    FilterChip(
-                        selected = rating == value,
-                        onClick = { rating = value },
-                        label = { Text(stringResource(R.string.destination_rating, value)) },
-                    )
-                }
-            }
-        }
-    }
+fun AddRestaurantEntry(onBack: () -> Unit, onSave: (ca.gbc.comp3074.p12.restaurantguide.data.Restaurant) -> Unit) {
+    RestaurantFormEntry(onBack = onBack, onSave = onSave)
 }
 
 @Composable

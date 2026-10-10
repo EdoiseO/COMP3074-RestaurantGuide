@@ -7,7 +7,8 @@ COMP3074 · Restaurant Guide · Team P12. These documents preserve the saved pro
 - [UI prototype build sections](prototype-build-breakdown.md) — solo build sequence, reusable components and demo checks.
 - [Restaurant List verification](restaurant-list-verification.md) — implementation scope, test results and device limits.
 - [Restaurant Details verification](restaurant-details-verification.md) — selected records, styling, actions, asset sources and runtime checks.
-- [Open design decisions and coverage gaps](design-decisions.md) — differences to resolve with the team.
+- [Add/Edit and photo verification](restaurant-form-verification.md) — shared form, half-star dragging, validated photo picking and captions.
+- [Design decisions and coverage gaps](design-decisions.md) — current prototype choices and remaining integrations.
 - [Wireframe previews](wireframes/) — exported design images.
 
 Design references:

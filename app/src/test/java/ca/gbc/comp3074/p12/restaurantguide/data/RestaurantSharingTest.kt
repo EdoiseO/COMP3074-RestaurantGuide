@@ -13,7 +13,7 @@ class RestaurantSharingTest {
             name = "Selected Restaurant",
             address = "123 Sample St, Toronto, ON A1A 1A1",
             phone = "416-555-0100 / 416-555-0101",
-            rating = 4,
+            rating = 4.5f,
             tags = listOf("Bakery", "Tacos"),
             description = "Fresh bread and tacos.",
             notes = "Private visit note",
@@ -26,7 +26,7 @@ class RestaurantSharingTest {
             "Selected Restaurant\n\n" +
                 "Address: 123 Sample St, Toronto, ON A1A 1A1\n" +
                 "Phone: 416-555-0100 / 416-555-0101\n" +
-                "Rating: 4.0 / 5\n" +
+                "Rating: 4.5 / 5\n" +
                 "Tags: Bakery, Tacos\n\n" +
                 "Description:\nFresh bread and tacos.",
             draft,
@@ -40,12 +40,12 @@ class RestaurantSharingTest {
         val first = Restaurant(
             id = 1, name = "First Restaurant", description = "First description",
             address = "111 First Avenue", phone = "416-555-0100",
-            tags = listOf("First tag"), rating = 1,
+            tags = listOf("First tag"), rating = 1f,
         )
         val second = Restaurant(
             id = 2, name = "Second Restaurant", description = "Second description",
             address = "222 Second Avenue", phone = "437-555-0200",
-            tags = listOf("Second tag"), rating = 5,
+            tags = listOf("Second tag"), rating = 5f,
         )
 
         val draft = restaurantShareBody(second)
@@ -66,7 +66,7 @@ class RestaurantSharingTest {
             address = "42 Rue de l’Église & Main St",
             phone = "+1 437 555 0123",
             tags = listOf("Pâtisserie", "Bread & pastries"),
-            rating = 3,
+            rating = 3f,
         )
 
         val draft = restaurantShareBody(selected)
@@ -83,7 +83,7 @@ class RestaurantSharingTest {
     fun missingOptionalValuesHaveReadableDraftFallbacks() {
         val selected = Restaurant(
             id = 4, name = "New Restaurant", description = "", address = "",
-            phone = "", tags = emptyList(), rating = 0,
+            phone = "", tags = emptyList(), rating = 0f,
         )
 
         val draft = restaurantShareBody(selected)

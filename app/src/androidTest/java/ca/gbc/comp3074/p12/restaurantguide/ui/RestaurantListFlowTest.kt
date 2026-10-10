@@ -79,10 +79,15 @@ class RestaurantListFlowTest {
         snapshot("empty-list")
         compose.onNodeWithTag("add-restaurant").performClick()
         compose.onNodeWithText("Save").performClick()
-        compose.onNodeWithText("Enter a restaurant name before saving.").assertIsDisplayed()
-        compose.onNodeWithText("Restaurant name *").performTextInput("My Cafe")
-        compose.onNodeWithText("Description").performTextInput("Coffee and lunch")
-        compose.onNodeWithText("Tags", substring = false).performTextInput("Cafe, Lunch, all")
+        compose.onNodeWithText("Enter a restaurant name before saving. You can add photos and other details later.").assertIsDisplayed()
+        compose.onNodeWithText("Got it").performClick()
+        compose.onNodeWithTag("add-name").performTextInput("My Cafe")
+        compose.onNodeWithTag("add-description").performScrollTo().performTextInput("Coffee and lunch")
+        listOf("Cafe", "Lunch", "all").forEach { tag ->
+            compose.onNodeWithTag("add-add-tag").performScrollTo().performClick()
+            compose.onNodeWithTag("tag-input").performTextInput(tag)
+            compose.onNodeWithTag("tag-save").performClick()
+        }
         compose.onNodeWithText("Save").performClick()
         compose.onNodeWithTag("result-count").assertTextContains("1 saved restaurant")
         compose.onNodeWithText("My Cafe").assertIsDisplayed()
@@ -129,11 +134,8 @@ class RestaurantListFlowTest {
     private fun snapshot(name: String) {
         compose.waitForIdle()
         val instrumentation = InstrumentationRegistry.getInstrumentation()
-        val bitmap = if (Build.VERSION.SDK_INT >= 34) {
-            instrumentation.uiAutomation.takeScreenshot(compose.activity.window)
-        } else {
-            instrumentation.uiAutomation.takeScreenshot()
-        } ?: return
+        android.os.SystemClock.sleep(200)
+        val bitmap = instrumentation.uiAutomation.takeScreenshot() ?: return
         val context = instrumentation.targetContext
         val folder = context.filesDir.resolve("list-test-screens").apply { mkdirs() }
         folder.resolve(name + ".png").outputStream().use {

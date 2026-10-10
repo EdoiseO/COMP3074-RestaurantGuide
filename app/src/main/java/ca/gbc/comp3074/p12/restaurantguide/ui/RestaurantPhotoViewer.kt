@@ -21,16 +21,19 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -38,8 +41,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.produceState
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -57,6 +62,7 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
@@ -75,7 +81,10 @@ data class RestaurantPhoto(
     val resourceId: Int? = null,
     val uri: String? = null,
     val caption: String = "",
+    val title: String = "",
 )
+
+enum class PhotoLoadStatus { Loading, Ready, Unavailable }
 
 /** Loads selected photos off the UI thread, bounded to the size of their display slot. */
 @Composable
@@ -85,9 +94,11 @@ fun RestaurantPhotoImage(
     modifier: Modifier = Modifier,
     contentScale: ContentScale = ContentScale.Crop,
     alignment: Alignment = Alignment.Center,
+    onStatusChanged: ((PhotoLoadStatus) -> Unit)? = null,
 ) {
     val resourceId = photo.resourceId
     if (resourceId != null && resourceId > 0) {
+        LaunchedEffect(resourceId) { onStatusChanged?.invoke(PhotoLoadStatus.Ready) }
         Image(
             painter = painterResource(resourceId),
             contentDescription = contentDescription,
@@ -107,23 +118,26 @@ fun RestaurantPhotoImage(
         } else {
             MaximumPhotoDimension
         }
-        val state by produceState<SelectedPhotoState>(
-            initialValue = SelectedPhotoState.Loading,
-            photo.uri,
-            resolver,
-            decodeSize,
-        ) {
-            value = SelectedPhotoState.Loading
-            val bitmap = withContext(Dispatchers.IO) {
-                photo.uri?.takeIf(String::isNotBlank)?.let { uri ->
-                    decodeSelectedPhoto(resolver, uri.toUri(), decodeSize)
+        // A new URI starts with a fresh Loading state; a previous photo's Ready state
+        // must never enable Save while its replacement is still being decoded.
+        val state by key(photo.uri, resolver, decodeSize) {
+            produceState<SelectedPhotoState>(initialValue = SelectedPhotoState.Loading) {
+                val bitmap = withContext(Dispatchers.IO) {
+                    photo.uri?.takeIf(String::isNotBlank)?.let { uri ->
+                        decodeSelectedPhoto(resolver, uri.toUri(), decodeSize)
+                    }
                 }
+                value = if (bitmap == null) SelectedPhotoState.Unavailable else SelectedPhotoState.Ready(bitmap)
             }
-            value = if (bitmap == null) {
-                SelectedPhotoState.Unavailable
-            } else {
-                SelectedPhotoState.Ready(bitmap)
-            }
+        }
+        val status = when (state) {
+            SelectedPhotoState.Loading -> PhotoLoadStatus.Loading
+            SelectedPhotoState.Unavailable -> PhotoLoadStatus.Unavailable
+            is SelectedPhotoState.Ready -> PhotoLoadStatus.Ready
+        }
+        val statusCallback by rememberUpdatedState(onStatusChanged)
+        LaunchedEffect(status) {
+            statusCallback?.invoke(status)
         }
         when (val current = state) {
             is SelectedPhotoState.Ready -> Image(
@@ -151,12 +165,13 @@ fun RestaurantPhotoImage(
                         },
                     contentAlignment = Alignment.Center,
                 ) {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_photo),
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(32.dp),
-                    )
+                    Column(Modifier.padding(4.dp), horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Icon(painterResource(R.drawable.ic_photo), null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant, modifier = Modifier.size(24.dp))
+                        Text(status, color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            fontSize = 12.sp, lineHeight = 16.sp, maxLines = 2, textAlign = TextAlign.Center)
+                    }
                 }
             }
         }
@@ -204,7 +219,7 @@ fun RestaurantPhotoViewer(
                     thumbnails.animateScrollToItem(pager.currentPage)
                 }
                 PhotoViewerHeader(
-                    restaurantName,
+                    photos[pager.currentPage].title.ifBlank { restaurantName },
                     stringResource(R.string.photo_viewer_count, pager.currentPage + 1, photos.size),
                     onClose,
                 )
@@ -251,15 +266,19 @@ fun RestaurantPhotoViewer(
                     }
                 }
                 photos[pager.currentPage].caption.takeIf(String::isNotBlank)?.let { caption ->
-                    Text(
+                    key(pager.currentPage) { Text(
                         text = caption,
                         color = Color.White,
                         style = MaterialTheme.typography.bodyMedium,
-                        maxLines = 3,
-                        overflow = TextOverflow.Ellipsis,
-                        modifier = Modifier.padding(horizontal = 20.dp, vertical = 8.dp),
-                    )
+                        modifier = Modifier.fillMaxWidth().heightIn(max = 120.dp)
+                            .verticalScroll(rememberScrollState())
+                            .padding(horizontal = 20.dp, vertical = 8.dp)
+                            .testTag("photo-viewer-caption"),
+                    ) }
                 }
+                Text(stringResource(R.string.photo_viewer_guidance), color = Color(0xFFB9B5BD),
+                    fontSize = 12.sp, modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
+                    textAlign = TextAlign.Center)
                 LazyRow(
                     state = thumbnails,
                     modifier = Modifier

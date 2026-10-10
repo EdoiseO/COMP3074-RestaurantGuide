@@ -6,7 +6,7 @@ fun restaurantShareBody(restaurant: Restaurant): String = buildString {
     appendLine()
     appendLine("Address: ${restaurant.address.ifBlank { "Not added" }}")
     appendLine("Phone: ${restaurant.phone.ifBlank { "Not added" }}")
-    appendLine("Rating: ${if (restaurant.rating > 0) "${restaurant.rating}.0 / 5" else "Not rated"}")
+    appendLine("Rating: ${if (restaurant.rating > 0f) "${formatRating(restaurant.rating)} / 5" else "Not rated"}")
     appendLine("Tags: ${restaurant.tags.joinToString(", ").ifBlank { "None" }}")
     appendLine()
     appendLine("Description:")

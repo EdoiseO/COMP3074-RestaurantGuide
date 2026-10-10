@@ -1,7 +1,6 @@
 package ca.gbc.comp3074.p12.restaurantguide.ui
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
@@ -65,6 +64,7 @@ import ca.gbc.comp3074.p12.restaurantguide.R
 import ca.gbc.comp3074.p12.restaurantguide.data.DemoRestaurants
 import ca.gbc.comp3074.p12.restaurantguide.data.Restaurant
 import ca.gbc.comp3074.p12.restaurantguide.data.filterRestaurants
+import ca.gbc.comp3074.p12.restaurantguide.data.formatRating
 import ca.gbc.comp3074.p12.restaurantguide.ui.theme.RestaurantGuideTheme
 
 private val ListHeadingColor = Color(0xFF4F378A)
@@ -242,13 +242,19 @@ private fun RestaurantCard(restaurant: Restaurant, onClick: () -> Unit) {
         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surface),
         border = BorderStroke(1.dp, ListBorderColor),
     ) {
-        if (restaurant.photoRes != null) {
-            Image(
-                painterResource(restaurant.photoRes), stringResource(R.string.list_photo, restaurant.name),
-                Modifier.fillMaxWidth().height(136.dp), contentScale = ContentScale.Crop,
-                alignment = when (restaurant.photoRes) {
-                    R.drawable.midyeci_riza -> BiasAlignment(0f, -0.5f)
-                    R.drawable.la_unica -> BiasAlignment(0f, -0.35f)
+        if (restaurant.coverUri.isNotBlank() || restaurant.photoRes != null) {
+            RestaurantPhotoImage(
+                photo = if (restaurant.coverUri.isNotBlank()) {
+                    RestaurantPhoto(uri = restaurant.coverUri)
+                } else {
+                    RestaurantPhoto(resourceId = restaurant.photoRes)
+                },
+                contentDescription = stringResource(R.string.list_photo, restaurant.name),
+                modifier = Modifier.fillMaxWidth().height(136.dp), contentScale = ContentScale.Crop,
+                alignment = when {
+                    restaurant.coverUri.isNotBlank() -> Alignment.Center
+                    restaurant.photoRes == R.drawable.midyeci_riza -> BiasAlignment(0f, -0.5f)
+                    restaurant.photoRes == R.drawable.la_unica -> BiasAlignment(0f, -0.35f)
                     else -> Alignment.Center
                 },
             )
@@ -271,7 +277,7 @@ private fun RestaurantCard(restaurant: Restaurant, onClick: () -> Unit) {
                     maxLines = 2, overflow = TextOverflow.Ellipsis,
                 )
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text(restaurant.rating.toString() + ".0", style = MaterialTheme.typography.titleMedium, color = ListTextColor)
+                    Text(formatRating(restaurant.rating), style = MaterialTheme.typography.titleMedium, color = ListTextColor)
                     Text("★", color = Color(0xFFFFB300), fontSize = 18.sp)
                 }
             }

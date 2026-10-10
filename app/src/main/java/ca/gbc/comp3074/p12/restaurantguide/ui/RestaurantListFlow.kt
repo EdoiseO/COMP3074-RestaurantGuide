@@ -15,35 +15,13 @@ import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import ca.gbc.comp3074.p12.restaurantguide.data.DemoRestaurants
 import ca.gbc.comp3074.p12.restaurantguide.data.Restaurant
+import ca.gbc.comp3074.p12.restaurantguide.data.restoreRestaurantState
+import ca.gbc.comp3074.p12.restaurantguide.data.saveRestaurantState
 import kotlinx.coroutines.launch
 
 private val RestaurantsSaver = listSaver<List<Restaurant>, Any>(
-    save = { records ->
-        listOf("restaurants-v2") + records.flatMap { r ->
-            listOf(r.id, r.name, r.description, r.address, r.phone, ArrayList(r.tags), r.rating,
-                r.photoRes ?: 0, r.listSummary, r.notes, ArrayList(r.galleryRes), r.mapRes ?: 0,
-                ArrayList(r.photoUris), ArrayList(r.photoCaptions), r.fullMapRes ?: 0)
-        }
-    },
-    restore = { values ->
-        val extended = values.firstOrNull() == "restaurants-v2"
-        val fields = if (extended) values.drop(1) else values
-        fields.chunked(if (extended) 15 else 9).map { v ->
-            Restaurant(
-                id = v[0] as Int, name = v[1] as String, description = v[2] as String,
-                address = v[3] as String, phone = v[4] as String,
-                tags = (v[5] as List<*>).map { it as String }, rating = v[6] as Int,
-                photoRes = (v[7] as Int).takeIf { it != 0 },
-                listSummary = v[8] as String,
-                notes = if (extended) v[9] as String else "",
-                galleryRes = if (extended) (v[10] as List<*>).map { it as Int } else emptyList(),
-                mapRes = if (extended) (v[11] as Int).takeIf { it != 0 } else null,
-                photoUris = if (extended) (v[12] as List<*>).map { it as String } else emptyList(),
-                photoCaptions = if (extended) (v[13] as List<*>).map { it as String } else emptyList(),
-                fullMapRes = if (extended) (v[14] as Int).takeIf { it != 0 } else null,
-            )
-        }
-    },
+    save = { saveRestaurantState(it) },
+    restore = ::restoreRestaurantState,
 )
 
 private val TagsSaver = listSaver<List<String>, String>(save = { it }, restore = { it })
@@ -100,14 +78,9 @@ fun RestaurantListFlow(initialRestaurants: List<Restaurant> = DemoRestaurants.re
         }
         "add" -> AddRestaurantEntry(
             onBack = { navigate("list") },
-            onSave = { name, description, tags, rating ->
-                restaurants = listOf(
-                    Restaurant(
-                        id = (restaurants.maxOfOrNull { it.id } ?: 0) + 1,
-                        name = name, description = description, address = "", phone = "",
-                        tags = tags, rating = rating,
-                    ),
-                ) + restaurants
+            onSave = { draft ->
+                val created = draft.copy(id = (restaurants.maxOfOrNull { it.id } ?: 0) + 1)
+                restaurants = listOf(created) + restaurants
                 query = ""
                 selectedTags = emptyList()
                 navigate("list")

@@ -1,10 +1,5 @@
 package ca.gbc.comp3074.p12.restaurantguide.ui
 
-import android.content.Intent
-import androidx.core.net.toUri
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.PickVisualMediaRequest
-import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -50,7 +45,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -65,18 +59,40 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import ca.gbc.comp3074.p12.restaurantguide.R
 import ca.gbc.comp3074.p12.restaurantguide.data.Restaurant
+import ca.gbc.comp3074.p12.restaurantguide.data.withVisitPhoto
 
 private val DetailsHeading = Color(0xFF4F378A)
 private val DetailsText = Color(0xFF49454F)
 private val DetailsBorder = Color(0xFFCAC4D0)
 
 fun restaurantPhotos(restaurant: Restaurant): List<RestaurantPhoto> {
-    val resources = (listOfNotNull(restaurant.photoRes) + restaurant.galleryRes).distinct()
-    return resources.map { RestaurantPhoto(resourceId = it) } +
+    // The album and cover are independent: removing an album photo must not
+    // reinsert it merely because that image is still the restaurant's cover.
+    return restaurant.galleryRes.distinct().map { restaurantResourcePhoto(it, restaurant.name) } +
         restaurant.photoUris.mapIndexed { index, uri ->
             RestaurantPhoto(uri = uri, caption = restaurant.photoCaptions.getOrElse(index) { "" })
         }
 }
+
+fun restaurantCoverPhoto(restaurant: Restaurant): RestaurantPhoto? =
+    restaurant.coverUri.takeIf(String::isNotBlank)?.let { RestaurantPhoto(uri = it, title = restaurant.name) }
+        ?: restaurant.photoRes?.let { restaurantResourcePhoto(it, restaurant.name) }
+
+fun restaurantCoverGallery(restaurant: Restaurant): List<RestaurantPhoto> {
+    val album = restaurantPhotos(restaurant)
+    val cover = restaurantCoverPhoto(restaurant) ?: return album
+    val coverIndex = album.indexOfFirst { it.resourceId == cover.resourceId && it.uri == cover.uri }
+    return if (coverIndex < 0) listOf(cover) + album
+        else listOf(album[coverIndex]) + album.filterIndexed { index, _ -> index != coverIndex }
+}
+
+private fun restaurantResourcePhoto(resourceId: Int, restaurantName: String): RestaurantPhoto =
+    RestaurantPhoto(resourceId = resourceId, title = when (resourceId) {
+        R.drawable.two_brothers_chicken -> "Chicken shawarma plate"
+        R.drawable.two_brothers_falafel -> "Falafel plate"
+        R.drawable.two_brothers_baklava -> "Baklava"
+        else -> restaurantName
+    })
 
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
@@ -94,9 +110,11 @@ fun RestaurantDetailsScreen(
     var notesOpen by rememberSaveable(restaurant.id) { mutableStateOf(false) }
     var photoOpen by rememberSaveable(restaurant.id) { mutableStateOf(false) }
     var photoIndex by rememberSaveable(restaurant.id) { mutableStateOf(0) }
+    var viewingCover by rememberSaveable(restaurant.id) { mutableStateOf(false) }
     var addPhotoOpen by rememberSaveable(restaurant.id) { mutableStateOf(false) }
     val photos = restaurantPhotos(restaurant)
-    val openPhoto: (Int) -> Unit = { index -> photoIndex = index; photoOpen = true }
+    val cover = restaurantCoverPhoto(restaurant)
+    val openPhoto: (Int) -> Unit = { index -> viewingCover = false; photoIndex = index; photoOpen = true }
 
     Scaffold { safePadding ->
         Column(Modifier.fillMaxSize().padding(safePadding).testTag("restaurant-details")) {
@@ -120,13 +138,15 @@ fun RestaurantDetailsScreen(
                         .clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
                         .background(MaterialTheme.colorScheme.surfaceVariant),
                 ) {
-                    if (restaurant.photoRes != null) {
+                    if (cover != null) {
                         RestaurantPhotoImage(
-                            RestaurantPhoto(resourceId = restaurant.photoRes),
+                            cover,
                             stringResource(R.string.destination_restaurant_photo, restaurant.name),
-                            Modifier.fillMaxSize().clickable(onClickLabel = stringResource(R.string.details_view_photo)) { openPhoto(0) },
+                            Modifier.fillMaxSize().clickable(onClickLabel = stringResource(R.string.details_view_photo)) {
+                                viewingCover = true; photoIndex = 0; photoOpen = true
+                            },
                             ContentScale.Crop,
-                            alignment = when (restaurant.photoRes) {
+                            alignment = when (cover.resourceId) {
                                 R.drawable.midyeci_riza -> BiasAlignment(0f, -0.5f)
                                 R.drawable.la_unica -> BiasAlignment(0f, -0.35f)
                                 else -> Alignment.Center
@@ -256,26 +276,25 @@ fun RestaurantDetailsScreen(
             onUpdate(restaurant.copy(notes = it)); notesOpen = false
         })
     }
-    if (photoOpen && photos.isNotEmpty()) {
-        RestaurantPhotoViewer(restaurant.name, photos, photoIndex, onClose = { photoOpen = false })
+    val viewerPhotos = if (viewingCover) restaurantCoverGallery(restaurant) else photos
+    if (photoOpen && viewerPhotos.isNotEmpty()) {
+        RestaurantPhotoViewer(restaurant.name, viewerPhotos, photoIndex, onClose = { photoOpen = false })
     }
     if (addPhotoOpen) {
-        AddVisitPhoto(onDismiss = { addPhotoOpen = false }, onSave = { uri, caption ->
-            onUpdate(restaurant.copy(photoUris = restaurant.photoUris + uri,
-                photoCaptions = restaurant.photoCaptions + caption))
+        VisitPhotoPicker(onDismiss = { addPhotoOpen = false }, onSave = { uri, caption ->
+            onUpdate(restaurant.withVisitPhoto(uri, caption))
             addPhotoOpen = false
         })
     }
 }
 
 @Composable
-private fun RatingBadge(rating: Int, modifier: Modifier) {
-    val description = stringResource(R.string.details_rating_accessibility, rating)
+private fun RatingBadge(rating: Float, modifier: Modifier) {
+    val description = stringResource(R.string.details_rating_accessibility, ca.gbc.comp3074.p12.restaurantguide.data.formatRating(rating))
     Surface(modifier, shape = RoundedCornerShape(8.dp), color = Color.White) {
         Box(Modifier.size(width = 126.dp, height = 36.dp).clearAndSetSemantics { contentDescription = description },
             contentAlignment = Alignment.Center) {
-            Text("★".repeat(rating.coerceIn(0, 5)) + "☆".repeat(5 - rating.coerceIn(0, 5)),
-                color = Color(0xFFF4B400), fontSize = 24.sp, lineHeight = 32.sp)
+            StarRating(rating, {}, interactive = false, starSize = 24.dp)
         }
     }
 }
@@ -307,44 +326,5 @@ private fun NotesEditor(notes: String, onDismiss: () -> Unit, onSave: (String) -
         },
         dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.details_cancel)) } },
         confirmButton = { TextButton(onClick = { onSave(draft.trim()) }) { Text(stringResource(R.string.destination_save)) } },
-    )
-}
-
-@Composable
-private fun AddVisitPhoto(onDismiss: () -> Unit, onSave: (String, String) -> Unit) {
-    var uri by rememberSaveable { mutableStateOf<String?>(null) }
-    var caption by rememberSaveable { mutableStateOf("") }
-    val context = LocalContext.current
-    val picker = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { selected ->
-        if (selected != null) uri = selected.toString()
-    }
-    AlertDialog(
-        onDismissRequest = onDismiss, shape = RoundedCornerShape(24.dp), containerColor = Color.White,
-        title = { Text(stringResource(R.string.details_add_visit_photo)) },
-        text = {
-            Column(Modifier.heightIn(max = 420.dp).verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                if (uri != null) RestaurantPhotoImage(RestaurantPhoto(uri = uri), stringResource(R.string.details_selected_photo),
-                    Modifier.fillMaxWidth().height(120.dp).clip(RoundedCornerShape(12.dp)), ContentScale.Fit)
-                Button(onClick = { picker.launch(PickVisualMediaRequest(ActivityResultContracts.PickVisualMedia.ImageOnly)) }) {
-                    Text(stringResource(R.string.details_choose_photo))
-                }
-                OutlinedTextField(caption, { caption = it }, Modifier.fillMaxWidth(),
-                    label = { Text(stringResource(R.string.details_caption)) },
-                    placeholder = { Text(stringResource(R.string.details_caption_hint)) },
-                    shape = RoundedCornerShape(12.dp), minLines = 2, maxLines = 4)
-            }
-        },
-        dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.details_cancel)) } },
-        confirmButton = {
-            TextButton(enabled = uri != null, onClick = {
-                uri?.let { selected ->
-                    try {
-                        context.contentResolver.takePersistableUriPermission(selected.toUri(), Intent.FLAG_GRANT_READ_URI_PERMISSION)
-                    } catch (_: SecurityException) { /* Some picker providers grant a temporary read permission only. */ }
-                    onSave(selected, caption.trim())
-                }
-            }) { Text(stringResource(R.string.destination_save)) }
-        },
     )
 }

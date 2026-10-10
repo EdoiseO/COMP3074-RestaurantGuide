@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="form_restaurant_photo">Restaurant photo</string>
+    <string name="form_add_cover">+ Add restaurant photo</string>
+    <string name="form_change_photo">Change photo</string>
+    <string name="form_remove_cover">Remove restaurant photo</string>
+    <string name="form_visit_photo">Visit photo</string>
+    <string name="form_remove_photo">Remove photo</string>
+    <string name="form_name_hint">Restaurant name</string>
+    <string name="form_description_hint">Describe the restaurant, favourite dishes or atmosphere.</string>
+    <string name="form_address_hint">Street address, city and postal code</string>
+    <string name="form_phone_hint">Phone number</string>
+    <string name="form_phone_error_title">Check phone number</string>
+    <string name="form_phone_error">Enter valid phone numbers, one per line.</string>
+    <string name="form_add_phone">Add phone number</string>
+    <string name="form_add_tag">+ Add tag</string>
+    <string name="form_tag_title">Add tag</string>
+    <string name="form_tag_label">Tag</string>
+    <string name="form_tag_add">Add</string>
+    <string name="form_address_details">Enter address details</string>
+    <string name="form_street">Street address</string>
+    <string name="form_city">City</string>
+    <string name="form_province">Province / state</string>
+    <string name="form_postal">Postal / ZIP code</string>
+    <string name="form_rating_guidance">Slide your finger across the stars.</string>
+    <string name="form_name_required_title">Restaurant name required</string>
+    <string name="form_name_required_body">Enter a restaurant name before saving. You can add photos and other details later.</string>
+</resources>

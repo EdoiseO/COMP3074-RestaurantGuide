@@ -16,7 +16,7 @@
     <string name="details_cancel">Cancel</string>
     <string name="details_delete_title">Delete restaurant?</string>
     <string name="details_delete_body">This removes the restaurant\nand its saved notes.</string>
-    <string name="details_rating_accessibility">Your rating: %1$d/5 stars</string>
+    <string name="details_rating_accessibility">Your rating: %1$s/5 stars</string>
     <string name="details_not_added">Not added</string>
     <string name="details_add_visit_photo">Add a visit photo</string>
     <string name="details_choose_photo">+ Choose photo</string>

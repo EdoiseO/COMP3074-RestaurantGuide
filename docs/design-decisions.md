@@ -1,24 +1,29 @@
 # Restaurant Guide design decisions
 
-This records differences and open questions in the saved [Project Design Proposal](https://docs.google.com/document/d/1NKr3KEbKyUrFnKXlOMboBQbfbuzSqtX0LajzcLMMMd0/edit) and Figma checkpoint. It does not revise the team proposal or infer code decisions. Coverage is based on the October 4 requirements comparison, the October 7 filter-demo verification and the October 8 canvas-arrangement handoff; a fresh full design audit was not performed for this repository setup.
+This records the saved [Project Design Proposal](https://docs.google.com/document/d/1NKr3KEbKyUrFnKXlOMboBQbfbuzSqtX0LajzcLMMMd0/edit), retained Figma evidence and current Android implementation decisions. The original proposal and [requirements](requirements.md) remain unchanged. Historical checkpoints below describe their state at the time; the October 10 shared-form checkpoint supersedes earlier placeholders and basic forms.
 
-## Decisions requiring agreement
+## Current implementation decisions — October 10 shared Add/Edit
 
-| Item | Saved evidence | Decision still required |
+| Item | Saved evidence | Current decision and boundary |
 | --- | --- | --- |
-| Rating value | FR-07 specifies a “1-5 star integer rating”; the model has `rating:Int`. The student requested direct dragging across the stars and half-star values; Figma illustrates 4.5/5. | Preserve the requested gesture while agreeing whether values snap to whole stars or the team revises the proposal/model for half-stars. The Figma picker itself remains a fixed illustration. |
-| Phone number(s) | FR-06 and the main objectives allow phone number(s), while the model has `phone:String` and the form has one field. | Agree how multiple numbers are entered and represented before implementing storage. |
-| User-defined tags | FR-10 permits selecting one or more tags; the proposal declares `tags:String`. The October 7 Figma demo uses any-selected-category matching (OR). | Confirm the application’s matching semantics and tag storage/entry behavior. The working demo choice does not silently revise the proposal. |
-| Photos, captions and visit notes | These are student-requested additions in Figma; they are absent from the saved requirements and Restaurant model. Sample menu photos are illustrative, not personal-visit evidence. | Agree whether to include them in implementation and update their scope/data model if included. |
-| Google Maps setup | The proposal names Google Maps SDK/API and location permissions but does not explain API-key/authentication setup. | Confirm configuration, address-to-location behavior and location handling. Keep any credentials outside version control. |
+| Rating value | FR-07 specifies a “1-5 star integer rating”; the student explicitly requested dragging directly across the stars and fractional values. Figma illustrates 4.5/5. | Implement half-star increments with enlarged draggable stars, numeric value and Save/Cancel. Add starts unrated; existing records retain their ratings. The model uses `Float`, and `restaurants-v3` UI state restores v2/legacy integer values. The user's request authorizes this prototype choice; the source requirement is not silently changed. |
+| Phone number(s) | FR-06 allows phone number(s); the retained form shows one Phone field. | Keep `phone:String` for the prototype, with multiple numbers entered on separate lines, an Add phone number control and invalid-number feedback. These are native extensions; no retained multiple-phone frame exists. Durable storage representation remains later work. |
+| Address entry | FR-08 requires separated fields and/or formatting assistance; Figma shows “Street address, city and postal code.” | Retain that field/prompt and add an address-details dialog with separated fields and Canadian postal-code formatting. This is a native extension, not an exported Figma variant; it does not geocode the address. |
+| User-defined tags | FR-10 permits selecting one or more tags; the proposal declares `tags:String`. The accepted demo uses any-selected-category matching (OR). | Store tags as a session `List<String>`, add/remove tags through the shared form and deduplicate without case. List filters are selectable; Details tags remain read-only outlined labels. Search combines with selected-tag matching using AND. |
+| Photos, captions and visit notes | The student explicitly requested these additions; they are absent from the original FR attributes. Existing menu photos are illustrative. | Include cover replacement/removal, album add/remove, optional captions for chosen photos and visit notes in the shared Add/Edit draft. Cancel discards draft changes; Save updates the selected/new record. Cover references and album/caption references are separate model fields. The real Android picker selection/returned-image byte identity, caption Save and restoration passed device verification. Durable photo storage remains later work. No additional scope approval is needed for already-authorized additions. |
+| Google Maps setup | The proposal names Google Maps SDK/API and location permissions. The accepted navigation is Details → internal Full-Screen Map → Get directions → Google Maps. | The current UI uses selected static map captures and a directions URL. Live map configuration, geocoding, current location and permission/error handling remain unimplemented. Keep future credentials outside version control. |
 
-## Saved design coverage and remaining gaps
+The shared form implements retained Add **52:213** and Edit **50:166**, preserving their wording, floating labels, 12dp input corners and 16dp photo-to-description border spacing. The retained rating overlay is **76:271**. Native dragging, typing and saving were verified separately from Figma's fixed illustration: the final build passed **32 unit tests, 18 device tests and zero lint errors**. See [Add/Edit verification](restaurant-form-verification.md) for scope and evidence. Fresh connector access remains quota-blocked, and no Figma or shared proposal edit was made.
+
+Current remaining work includes real external email composition, gallery zoom, durable storage, live map/location/permission flows and the complete demo journey. The verified picker workflow uses the API 37.1 test fixture; physical touch, minimum-API, landscape and large-font behavior remain unverified. Earlier List and Details reports remain historical checkpoints.
+
+## Earlier snapshot — saved Figma coverage before the Android shared form
 
 The Home filters and read-only Details tags were completed in Figma: eight fixed filter states, any-selected-category matching, reset with All, and preservation of filters after Details → Back. This is prototype behavior, not proof of Android data persistence.
 
 The October 8 arrangement changed canvas positions only and preserved existing frame IDs, contents and prototype wiring. It did not add missing screens.
 
-The latest full requirements comparison still identifies:
+At that saved design checkpoint, the requirements comparison identified:
 
 - **Splash Screen:** application logo/name and transition to Restaurant List. A logo placeholder was accepted for drafting.
 - **Full-Screen Map:** selected restaurant marker, Back and Get directions, reached from Details. The accepted flow is Details → internal Full-Screen Map → Get directions → Google Maps.
@@ -33,7 +38,9 @@ The gallery has arrow/thumbnail navigation and Close; swipe and zoom are not imp
 
 Facebook, Twitter/X, favourites and rating filtering remain optional/future scope in the proposal.
 
-## October 10 — Restaurant List prototype implementation
+## Earlier snapshot — October 10 Restaurant List implementation
+
+The following records the original List checkpoint. Later implementation bundled all three original covers, built Details and replaced its basic Add/Edit forms with the shared form above; its placeholder and integer-rating statements are historical.
 
 For the Android UI prototype, name search is a trimmed, case-insensitive substring match. Multiple selected tags use OR, and search combines with that result using AND. All clears tag selection while retaining the query; the no-results action clears both. This follows the previously accepted demo behavior. Tags are a list of strings in the in-memory model, with entry split on commas and deduplicated without case; the storage representation remains undecided. Integer ratings are retained for this step; the requested draggable half-star picker is still part of the future shared form. The prototype keeps query/filter/scroll and session records through saved UI state; this is not durable storage.
 

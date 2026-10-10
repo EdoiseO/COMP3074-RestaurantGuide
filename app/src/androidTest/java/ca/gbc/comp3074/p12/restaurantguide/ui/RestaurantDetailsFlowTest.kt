@@ -87,11 +87,11 @@ class RestaurantDetailsFlowTest {
         openRestaurant(2)
         compose.onNodeWithText("Edit").performClick()
         compose.onNodeWithTag("edit-name").assertTextContains("Midyeci Riza")
-        compose.onNodeWithTag("edit-description").performTextReplacement("Unsaved description")
+        compose.onNodeWithTag("edit-description").performScrollTo().performTextReplacement("Unsaved description")
         compose.onNodeWithTag("edit-back").performClick()
         compose.onNodeWithText("Turkish street food on Wilson Avenue", substring = true).assertIsDisplayed()
         compose.onNodeWithText("Edit").performClick()
-        compose.onNodeWithTag("edit-description").performTextReplacement("Try the stuffed mussels and ayran.")
+        compose.onNodeWithTag("edit-description").performScrollTo().performTextReplacement("Try the stuffed mussels and ayran.")
         compose.onNodeWithTag("edit-save").performClick()
         compose.onNodeWithText("Try the stuffed mussels and ayran.").performScrollTo().assertIsDisplayed()
         compose.onNodeWithText("954 Wilson Ave, North York, ON M3K 1E7").performScrollTo().assertIsDisplayed()
@@ -105,15 +105,15 @@ class RestaurantDetailsFlowTest {
         openRestaurant(1)
         compose.onNodeWithTag("details-photo-0").performScrollTo().performClick()
         compose.onNodeWithTag("restaurant_photo_viewer").assertIsDisplayed()
-        compose.onNodeWithText("1 / 4").assertIsDisplayed()
+        compose.onNodeWithText("1 / 4 · My photos").assertIsDisplayed()
         compose.onNodeWithContentDescription("Previous photo").performClick()
-        compose.onNodeWithText("4 / 4").assertIsDisplayed()
+        compose.onNodeWithText("4 / 4 · My photos").assertIsDisplayed()
         compose.onNodeWithContentDescription("Next photo").performClick()
-        compose.onNodeWithText("1 / 4").assertIsDisplayed()
+        compose.onNodeWithText("1 / 4 · My photos").assertIsDisplayed()
         compose.onNodeWithTag("restaurant_photo_pager").performTouchInput { swipeLeft() }
-        compose.onNodeWithText("2 / 4").assertIsDisplayed()
+        compose.onNodeWithText("2 / 4 · My photos").assertIsDisplayed()
         compose.onNodeWithContentDescription("Next photo").performClick()
-        compose.onNodeWithText("3 / 4").assertIsDisplayed()
+        compose.onNodeWithText("3 / 4 · My photos").assertIsDisplayed()
         snapshot("photo-gallery")
         compose.onNodeWithContentDescription("Close photos").performClick()
         compose.onNodeWithTag("restaurant-details").assertIsDisplayed()
@@ -164,7 +164,7 @@ class RestaurantDetailsFlowTest {
         restoration.setContent { RestaurantGuideTheme { RestaurantListFlow(records) } }
         openRestaurant(2)
         compose.onNodeWithTag("details-photo-1").performScrollTo().performClick()
-        compose.onNodeWithText("2 / 2").assertIsDisplayed()
+        compose.onNodeWithText("2 / 2 · My photos").assertIsDisplayed()
         compose.onNodeWithText("Stuffed mussels — get these again.").assertIsDisplayed()
         restoration.emulateSavedInstanceStateRestore()
         compose.onNodeWithText("Stuffed mussels — get these again.").assertIsDisplayed()
@@ -180,6 +180,7 @@ class RestaurantDetailsFlowTest {
     private fun snapshot(name: String) {
         compose.waitForIdle()
         val instrumentation = InstrumentationRegistry.getInstrumentation()
+        android.os.SystemClock.sleep(200)
         val bitmap = instrumentation.uiAutomation.takeScreenshot() ?: return
         val folder = instrumentation.targetContext.filesDir.resolve("list-test-screens").apply { mkdirs() }
         folder.resolve(name + ".png").outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }

@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="visit_photo_reselect">This photo could not be opened. Choose another photo.</string>
+    <string name="visit_photo_picker_unavailable">The photo picker could not be opened. Try again.</string>
+</resources>

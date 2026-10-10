@@ -7,7 +7,7 @@ data class Restaurant(
     val address: String,
     val phone: String,
     val tags: List<String>,
-    val rating: Int,
+    val rating: Float,
     val photoRes: Int? = null,
     val listSummary: String = description,
     val notes: String = "",
@@ -16,6 +16,7 @@ data class Restaurant(
     val photoUris: List<String> = emptyList(),
     val photoCaptions: List<String> = emptyList(),
     val fullMapRes: Int? = null,
+    val coverUri: String = "",
 )
 
 fun filterRestaurants(
