@@ -32,3 +32,11 @@ The latest full requirements comparison still identifies:
 The gallery has arrow/thumbnail navigation and Close; swipe and zoom are not implemented in the saved Figma checkpoint. Photo selection, caption entry, form entry, uploads, thumbnail removal and persistence remain visual controls at that checkpoint. The first prototype’s fixed-state navigation should not be described as a completed functional application.
 
 Facebook, Twitter/X, favourites and rating filtering remain optional/future scope in the proposal.
+
+## October 10 — Restaurant List prototype implementation
+
+For the Android UI prototype, name search is a trimmed, case-insensitive substring match. Multiple selected tags use OR, and search combines with that result using AND. All clears tag selection while retaining the query; the no-results action clears both. This follows the previously accepted demo behavior. Tags are a list of strings in the in-memory model, with entry split on commas and deduplicated without case; the storage representation remains undecided. Integer ratings are retained for this step; the requested draggable half-star picker is still part of the future shared form. The prototype keeps query/filter/scroll and session records through saved UI state; this is not durable storage.
+
+Restaurant List has basic Details/Add/About destinations to exercise navigation. Full restaurant workflows remain separate. A custom tag named All is displayed with “(tag)” to distinguish it from the reset control, and list keys separate reset/tag items. Two Brothers uses the retained source photo; the other two originals are unavailable locally and Figma asset retrieval is quota-blocked, so their image slots have neutral placeholders.
+
+Device tests explicitly use Espresso 3.7.0 because the Compose test dependency otherwise pulls an older version that calls a removed reflective InputManager API on the available API 37 image. This is a test-only compatibility fix documented in the [official AndroidX Test release notes](https://developer.android.com/jetpack/androidx/releases/test#espresso-3.7.0).

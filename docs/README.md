@@ -4,7 +4,8 @@ COMP3074 · Restaurant Guide · Team P12. These documents preserve the saved pro
 
 - [Requirements and proposal data model](requirements.md) — source wording and original requirement IDs.
 - [Development plan and responsibilities](development-plan.md) — course deadlines and proposed internal checkpoints.
-- [UI prototype build sections](prototype-build-breakdown.md) — screen tasks, reusable components, proposed four-member split and demo checks.
+- [UI prototype build sections](prototype-build-breakdown.md) — solo build sequence, reusable components and demo checks.
+- [Restaurant List verification](restaurant-list-verification.md) — implementation scope, test results and device limits.
 - [Open design decisions and coverage gaps](design-decisions.md) — differences to resolve with the team.
 - [Wireframe previews](wireframes/) — exported design images.
 

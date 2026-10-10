@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="list_about">About</string>
+    <string name="list_add">Add restaurant</string>
+    <string name="list_search_label">Search restaurants</string>
+    <string name="list_search_hint">Search by restaurant name</string>
+    <string name="list_clear_search">Clear search</string>
+    <string name="list_all">All</string>
+    <string name="list_all_tag_label">%1$s (tag)</string>
+    <string name="list_no_results">No restaurants found</string>
+    <string name="list_no_results_hint">Try another name or change your selected tags.</string>
+    <string name="list_empty_hint">Add a restaurant to start your guide.</string>
+    <string name="list_clear_filters">Clear search and filters</string>
+    <string name="list_photo">Photo of %1$s</string>
+    <string name="list_photo_placeholder">Restaurant image</string>
+    <plurals name="list_saved_count"><item quantity="one">%d saved restaurant</item><item quantity="other">%d saved restaurants</item></plurals>
+    <plurals name="list_result_count"><item quantity="one">%d restaurant found</item><item quantity="other">%d restaurants found</item></plurals>
+</resources>

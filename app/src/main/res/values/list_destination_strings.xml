@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="destination_back">← Back</string>
+    <string name="destination_details_title">Restaurant Details</string>
+    <string name="destination_add_title">Add restaurant</string>
+    <string name="destination_about_title">About</string>
+    <string name="destination_save">Save</string>
+    <string name="destination_restaurant_name">Restaurant name *</string>
+    <string name="destination_name_required">Enter a restaurant name before saving.</string>
+    <string name="destination_description">Description</string>
+    <string name="destination_tags">Tags</string>
+    <string name="destination_tags_help">Separate tags with commas</string>
+    <string name="destination_address">Address</string>
+    <string name="destination_phone">Phone</string>
+    <string name="destination_rating">%1$d ★</string>
+    <string name="destination_your_rating">Your rating</string>
+    <string name="destination_restaurant_photo">%1$s restaurant photo</string>
+    <string name="destination_project_info">COMP3074 · Team P12</string>
+    <string name="destination_application_info">Display and manage all saved restaurants</string>
+    <string name="destination_team_members">Team members</string>
+    <string name="destination_team_names">Kalid Ali\nPhillip Onofua\nMohamed Amine OUATAR\nJoshua Zaakir</string>
+</resources>
