@@ -69,9 +69,9 @@
   },
   "video": {
     "path": "Restaurant-Guide-UI-Prototype.mp4",
-    "sha256": "9e2a5a4b732ea195f198db33ac123fb00abc1306e59abb974e66143aa5afb171",
-    "duration_seconds": 298.234,
-    "size_bytes": 5345270,
+    "sha256": "65e80acc6274de0a26cc31a40ae578e8cd757efba498d073a7ec346909ce8db9",
+    "duration_seconds": 298.2,
+    "size_bytes": 7019107,
     "dimensions": [
       1920,
       1080
@@ -83,21 +83,119 @@
     "voiceover": false,
     "on_screen_transcript": false,
     "chapters": 12,
-    "chapter_markers_unchanged": true,
+    "chapter_markers_unchanged": false,
     "native_playback_speed": 1.5,
     "full_decode_passed": true,
-    "chapter_explanations_retained": true,
-    "native_app_viewport_retained": true,
-    "visual_review_scope": "All twelve chapter samples; transcript box and prior narration footer removed, chapter explanations and native app footage preserved.",
+    "visual_review_scope": "All twelve encoded chapter samples, plus actual 4.5 rating, Gallery and About states; sampled review, not a full playback watch.",
     "independent_visual_review": {
       "status": "passed",
-      "sha256": "9e2a5a4b732ea195f198db33ac123fb00abc1306e59abb974e66143aa5afb171",
+      "sha256": "65e80acc6274de0a26cc31a40ae578e8cd757efba498d073a7ec346909ce8db9",
       "chapters_sampled": 12,
-      "scope": "One sample 4 seconds after each of the 12 chapter starts, plus full-resolution About and Gallery frames; sampled review, not a full playback review.",
-      "no_transcript_text_or_box": true,
-      "no_background_patch_seam": true,
-      "native_ui_and_explanations_retained": true
-    }
+      "scope": "Sampled visual review of all 12 encoded chapter previews plus 7 extra stills extracted from the final MP4. Independent ffprobe metadata/stream check. This is not a full playback watch or renewed Android functional test.",
+      "no_on_screen_transcript": true,
+      "native_app_colors_retained": true,
+      "no_orange_presentation_lettering": true,
+      "text_unclipped": true
+    },
+    "frames": 8946,
+    "chapter_markers_regenerated_from_video_frames": true,
+    "all_twelve_titles_and_order_retained": true,
+    "native_app_content_retained": true,
+    "native_app_viewport_dimensions": [
+      484,
+      1004
+    ],
+    "native_corner_framing_pixels": 18,
+    "chapter_explanation_copy": "Exact project-purpose phrases and retained chapter excerpts; no new app labels.",
+    "presentation": {
+      "palette": {
+        "cream": "#F7F2E9",
+        "charcoal": "#242522",
+        "olive": "#737B57",
+        "gold": "#E1AC4D"
+      },
+      "fonts": [
+        "Georgia",
+        "Avenir Next"
+      ],
+      "typography_policy": "Neutral charcoal/cream/gray text; no orange or gold lettering",
+      "native_app_recolored": false,
+      "layouts": "Alternating larger native previews with restaurant photo cards, feature icons, action cards, rating and team layouts."
+    },
+    "chapter_timing": [
+      {
+        "id": "01-splash",
+        "title": "Splash Screen",
+        "start_seconds": 0.0,
+        "end_seconds": 15.033333333333333
+      },
+      {
+        "id": "02-list",
+        "title": "Restaurant List",
+        "start_seconds": 15.033333333333333,
+        "end_seconds": 27.5
+      },
+      {
+        "id": "03-search-filter",
+        "title": "Restaurant List",
+        "start_seconds": 27.5,
+        "end_seconds": 57.06666666666667
+      },
+      {
+        "id": "04-details",
+        "title": "Restaurant Details",
+        "start_seconds": 57.06666666666667,
+        "end_seconds": 71.53333333333333
+      },
+      {
+        "id": "05-gallery",
+        "title": "My photos",
+        "start_seconds": 71.53333333333333,
+        "end_seconds": 97.26666666666667
+      },
+      {
+        "id": "06-notes",
+        "title": "Notes",
+        "start_seconds": 97.26666666666667,
+        "end_seconds": 114.23333333333333
+      },
+      {
+        "id": "07-map",
+        "title": "Full-Screen Map",
+        "start_seconds": 114.23333333333333,
+        "end_seconds": 129.2
+      },
+      {
+        "id": "08-email",
+        "title": "Share by email",
+        "start_seconds": 129.2,
+        "end_seconds": 151.8
+      },
+      {
+        "id": "09-add-validation",
+        "title": "Add Restaurant",
+        "start_seconds": 151.8,
+        "end_seconds": 186.5
+      },
+      {
+        "id": "10-rating-tags",
+        "title": "Add Restaurant",
+        "start_seconds": 186.5,
+        "end_seconds": 224.63333333333333
+      },
+      {
+        "id": "11-edit-delete",
+        "title": "Edit Restaurant",
+        "start_seconds": 224.63333333333333,
+        "end_seconds": 280.43333333333334
+      },
+      {
+        "id": "12-about",
+        "title": "About",
+        "start_seconds": 280.43333333333334,
+        "end_seconds": 298.2
+      }
+    ]
   },
   "recording": {
     "source": "production MainActivity, four separately recorded guest sessions",
@@ -146,14 +244,17 @@
     "sha256": "cb342c25b23e0371f267f42e26856cf45f23e73a47ab71308505bf67a8bfc964",
     "included_in_video": false,
     "timing_file": "narration.srt",
-    "retained_as_requested": true
+    "retained_as_requested": true,
+    "timing_file_scope": "Historical standalone timing from the prior export; not embedded and not claimed to match regenerated chapter timestamps exactly."
   },
   "media_revision": {
-    "request": "Remove on-screen transcript and voiceover",
+    "request": "Make the presentation more visually appealing; avoid purple presentation styling and orange lettering.",
     "date": "2026-10-10",
     "app_source_changed": false,
     "app_tests_rerun": false,
     "prior_app_checkpoint_retained": true,
-    "original_export_sha256": "aeed5726ba4c29bab137ba4a8ea00ea01211b8e841f188a7cb5a6a50e9eea7cb"
+    "previous_export_sha256": "9e2a5a4b732ea195f198db33ac123fb00abc1306e59abb974e66143aa5afb171",
+    "original_narrated_export_sha256": "aeed5726ba4c29bab137ba4a8ea00ea01211b8e841f188a7cb5a6a50e9eea7cb",
+    "rendered_wording_matches_retained_sources": true
   }
 }
