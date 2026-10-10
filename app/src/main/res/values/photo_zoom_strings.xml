@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="photo_zoom_in">Zoom in</string>
+    <string name="photo_zoom_out">Zoom out</string>
+    <string name="photo_zoom_reset">Reset zoom</string>
+    <string name="photo_zoom_percent">%1$d%%</string>
+    <string name="photo_zoom_description">Zoom %1$d percent</string>
+    <string name="photo_zoom_pan_left">Pan photo left</string>
+    <string name="photo_zoom_pan_right">Pan photo right</string>
+    <string name="photo_zoom_pan_up">Pan photo up</string>
+    <string name="photo_zoom_pan_down">Pan photo down</string>
+</resources>

@@ -25,6 +25,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -38,32 +39,45 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
 import androidx.compose.runtime.produceState
+import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.CustomAccessibilityAction
+import androidx.compose.ui.semantics.ProgressBarRangeInfo
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.customActions
+import androidx.compose.ui.semantics.progressBarRangeInfo
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.setProgress
+import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
@@ -95,12 +109,22 @@ fun RestaurantPhotoImage(
     contentScale: ContentScale = ContentScale.Crop,
     alignment: Alignment = Alignment.Center,
     onStatusChanged: ((PhotoLoadStatus) -> Unit)? = null,
+    onIntrinsicSizeChanged: ((IntSize) -> Unit)? = null,
 ) {
     val resourceId = photo.resourceId
     if (resourceId != null && resourceId > 0) {
-        LaunchedEffect(resourceId) { onStatusChanged?.invoke(PhotoLoadStatus.Ready) }
+        val painter = painterResource(resourceId)
+        val sizeCallback by rememberUpdatedState(onIntrinsicSizeChanged)
+        val statusCallback by rememberUpdatedState(onStatusChanged)
+        LaunchedEffect(resourceId, painter.intrinsicSize) {
+            val intrinsic = painter.intrinsicSize
+            if (intrinsic.width.isFinite() && intrinsic.height.isFinite()) {
+                sizeCallback?.invoke(IntSize(intrinsic.width.roundToInt(), intrinsic.height.roundToInt()))
+            }
+            statusCallback?.invoke(PhotoLoadStatus.Ready)
+        }
         Image(
-            painter = painterResource(resourceId),
+            painter = painter,
             contentDescription = contentDescription,
             modifier = modifier,
             contentScale = contentScale,
@@ -136,7 +160,10 @@ fun RestaurantPhotoImage(
             is SelectedPhotoState.Ready -> PhotoLoadStatus.Ready
         }
         val statusCallback by rememberUpdatedState(onStatusChanged)
-        LaunchedEffect(status) {
+        val sizeCallback by rememberUpdatedState(onIntrinsicSizeChanged)
+        LaunchedEffect(state) {
+            val bitmap = (state as? SelectedPhotoState.Ready)?.bitmap
+            sizeCallback?.invoke(bitmap?.let { IntSize(it.width, it.height) } ?: IntSize.Zero)
             statusCallback?.invoke(status)
         }
         when (val current = state) {
@@ -185,6 +212,7 @@ fun RestaurantPhotoViewer(
     photos: List<RestaurantPhoto>,
     initialIndex: Int,
     onClose: () -> Unit,
+    modifier: Modifier = Modifier,
 ) {
     Dialog(
         onDismissRequest = onClose,
@@ -194,130 +222,138 @@ fun RestaurantPhotoViewer(
             dismissOnClickOutside = false,
         ),
     ) {
-        Column(
-            modifier = Modifier
+        BoxWithConstraints(
+            modifier = modifier
                 .fillMaxSize()
                 .background(Color.Black)
-                .safeDrawingPadding()
-                .testTag("restaurant_photo_viewer"),
+                .safeDrawingPadding(),
         ) {
-            if (photos.isEmpty()) {
-                PhotoViewerHeader(restaurantName, null, onClose)
-                Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
-                    Text(stringResource(R.string.photo_viewer_empty), color = Color.White)
-                }
-            } else {
-                val pager = rememberPagerState(
-                    initialPage = initialIndex.coerceIn(0, photos.lastIndex),
-                    pageCount = { photos.size },
-                )
-                val scope = rememberCoroutineScope()
-                val thumbnails = rememberLazyListState(
-                    initialFirstVisibleItemIndex = initialIndex.coerceIn(0, photos.lastIndex),
-                )
-                LaunchedEffect(pager.currentPage) {
-                    thumbnails.animateScrollToItem(pager.currentPage)
-                }
-                PhotoViewerHeader(
-                    photos[pager.currentPage].title.ifBlank { restaurantName },
-                    stringResource(R.string.photo_viewer_count, pager.currentPage + 1, photos.size),
-                    onClose,
-                )
-                Box(Modifier.weight(1f).fillMaxWidth()) {
-                    HorizontalPager(
-                        state = pager,
-                        modifier = Modifier.fillMaxSize().testTag("restaurant_photo_pager"),
-                    ) { index ->
-                        RestaurantPhotoImage(
-                            photo = photos[index],
-                            contentDescription = stringResource(
-                                R.string.photo_viewer_photo_description,
-                                restaurantName,
+            val compact = maxHeight < 500.dp
+            val cramped = maxHeight < 300.dp
+            val captionHeight = if (cramped) 32.dp else if (compact) 48.dp else 120.dp
+            Column(Modifier.fillMaxSize().testTag("restaurant_photo_viewer")) {
+                if (photos.isEmpty()) {
+                    PhotoViewerHeader(restaurantName, null, onClose, compact)
+                    Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
+                        Text(stringResource(R.string.photo_viewer_empty), color = Color.White)
+                    }
+                } else {
+                    val pager = rememberPagerState(
+                        initialPage = initialIndex.coerceIn(0, photos.lastIndex),
+                        pageCount = { photos.size },
+                    )
+                    val scope = rememberCoroutineScope()
+                    val thumbnails = rememberLazyListState(
+                        initialFirstVisibleItemIndex = initialIndex.coerceIn(0, photos.lastIndex),
+                    )
+                    LaunchedEffect(pager.currentPage) {
+                        thumbnails.animateScrollToItem(pager.currentPage)
+                    }
+                    // Each newly selected image starts at 100%, including arrow/thumbnail changes.
+                    val zoom = remember(pager.currentPage, photos[pager.currentPage]) { PhotoZoomState() }
+                    PhotoViewerHeader(
+                        photos[pager.currentPage].title.ifBlank { restaurantName },
+                        stringResource(R.string.photo_viewer_count, pager.currentPage + 1, photos.size),
+                        onClose,
+                        compact,
+                    )
+                    PhotoZoomControls(zoom, Modifier.align(Alignment.CenterHorizontally), compact, cramped)
+                    Box(Modifier.weight(1f).fillMaxWidth()) {
+                        HorizontalPager(
+                            state = pager,
+                            userScrollEnabled = !zoom.enlarged,
+                            modifier = Modifier.fillMaxSize().testTag("restaurant_photo_pager"),
+                        ) { index ->
+                            val inactiveZoom = remember(index, photos[index]) { PhotoZoomState() }
+                            ZoomablePhoto(
+                                photo = photos[index], restaurantName = restaurantName,
+                                index = index, photoCount = photos.size,
+                                zoom = if (index == pager.currentPage) zoom else inactiveZoom,
+                                active = index == pager.currentPage,
+                                compact = compact,
+                            )
+                        }
+                        Row(
+                            modifier = Modifier
+                                .matchParentSize()
+                                .padding(horizontal = 12.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                        ) {
+                            PhotoNavigationButton(
+                                text = "‹",
+                                description = stringResource(R.string.photo_viewer_previous),
+                                enabled = photos.size > 1,
+                            ) {
+                                val previous = (pager.currentPage - 1 + photos.size) % photos.size
+                                scope.launch { pager.animateScrollToPage(previous) }
+                            }
+                            PhotoNavigationButton(
+                                text = "›",
+                                description = stringResource(R.string.photo_viewer_next),
+                                enabled = photos.size > 1,
+                            ) {
+                                val next = (pager.currentPage + 1) % photos.size
+                                scope.launch { pager.animateScrollToPage(next) }
+                            }
+                        }
+                    }
+                    photos[pager.currentPage].caption.takeIf(String::isNotBlank)?.let { caption ->
+                        key(pager.currentPage) { Text(
+                            text = caption,
+                            color = Color.White,
+                            style = MaterialTheme.typography.bodyMedium,
+                            modifier = Modifier.fillMaxWidth().heightIn(max = captionHeight)
+                                .verticalScroll(rememberScrollState())
+                                .padding(horizontal = 20.dp, vertical = if (compact) 4.dp else 8.dp)
+                                .testTag("photo-viewer-caption"),
+                        ) }
+                    }
+                    if (!cramped) {
+                        Text(stringResource(R.string.photo_viewer_guidance), color = Color(0xFFB9B5BD),
+                            fontSize = 12.sp, modifier = Modifier.fillMaxWidth().padding(bottom = if (compact) 4.dp else 12.dp),
+                            textAlign = TextAlign.Center)
+                    }
+                    LazyRow(
+                        state = thumbnails,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp, vertical = if (cramped) 2.dp else if (compact) 4.dp else 16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    ) {
+                        itemsIndexed(photos) { index, photo ->
+                            val isActive = index == pager.currentPage
+                            val description = stringResource(
+                                R.string.photo_viewer_thumbnail_description,
                                 index + 1,
                                 photos.size,
-                            ),
-                            contentScale = ContentScale.Fit,
-                            modifier = Modifier.fillMaxSize().padding(vertical = 12.dp),
-                        )
-                    }
-                    Row(
-                        modifier = Modifier
-                            .matchParentSize()
-                            .padding(horizontal = 12.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                    ) {
-                        PhotoNavigationButton(
-                            text = "‹",
-                            description = stringResource(R.string.photo_viewer_previous),
-                            enabled = photos.size > 1,
-                        ) {
-                            val previous = (pager.currentPage - 1 + photos.size) % photos.size
-                            scope.launch { pager.animateScrollToPage(previous) }
-                        }
-                        PhotoNavigationButton(
-                            text = "›",
-                            description = stringResource(R.string.photo_viewer_next),
-                            enabled = photos.size > 1,
-                        ) {
-                            val next = (pager.currentPage + 1) % photos.size
-                            scope.launch { pager.animateScrollToPage(next) }
-                        }
-                    }
-                }
-                photos[pager.currentPage].caption.takeIf(String::isNotBlank)?.let { caption ->
-                    key(pager.currentPage) { Text(
-                        text = caption,
-                        color = Color.White,
-                        style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.fillMaxWidth().heightIn(max = 120.dp)
-                            .verticalScroll(rememberScrollState())
-                            .padding(horizontal = 20.dp, vertical = 8.dp)
-                            .testTag("photo-viewer-caption"),
-                    ) }
-                }
-                Text(stringResource(R.string.photo_viewer_guidance), color = Color(0xFFB9B5BD),
-                    fontSize = 12.sp, modifier = Modifier.fillMaxWidth().padding(bottom = 12.dp),
-                    textAlign = TextAlign.Center)
-                LazyRow(
-                    state = thumbnails,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 16.dp),
-                    horizontalArrangement = Arrangement.spacedBy(10.dp),
-                ) {
-                    itemsIndexed(photos) { index, photo ->
-                        val isActive = index == pager.currentPage
-                        val description = stringResource(
-                            R.string.photo_viewer_thumbnail_description,
-                            index + 1,
-                            photos.size,
-                        )
-                        Box(
-                            modifier = Modifier
-                                .size(72.dp)
-                                .clip(RoundedCornerShape(14.dp))
-                                .border(
-                                    BorderStroke(
-                                        if (isActive) 2.dp else 1.dp,
-                                        if (isActive) Color.White else Color(0xFF49454F),
-                                    ),
-                                    RoundedCornerShape(14.dp),
-                                )
-                                .clickable(role = Role.Button) {
-                                    scope.launch { pager.animateScrollToPage(index) }
-                                }
-                                .semantics {
-                                    contentDescription = description
-                                    selected = isActive
-                                }
-                                .padding(if (isActive) 3.dp else 2.dp),
-                        ) {
-                            RestaurantPhotoImage(
-                                photo = photo,
-                                contentDescription = null,
-                                modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(11.dp)),
                             )
+                            Box(
+                                modifier = Modifier
+                                    .size(if (compact) 48.dp else 72.dp)
+                                    .clip(RoundedCornerShape(14.dp))
+                                    .border(
+                                        BorderStroke(
+                                            if (isActive) 2.dp else 1.dp,
+                                            if (isActive) Color.White else Color(0xFF49454F),
+                                        ),
+                                        RoundedCornerShape(14.dp),
+                                    )
+                                    .clickable(role = Role.Button) {
+                                        scope.launch { pager.animateScrollToPage(index) }
+                                    }
+                                    .semantics {
+                                        contentDescription = description
+                                        selected = isActive
+                                    }
+                                    .padding(if (isActive) 3.dp else 2.dp),
+                            ) {
+                                RestaurantPhotoImage(
+                                    photo = photo,
+                                    contentDescription = null,
+                                    modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(11.dp)),
+                                )
+                            }
                         }
                     }
                 }
@@ -327,9 +363,118 @@ fun RestaurantPhotoViewer(
 }
 
 @Composable
-private fun PhotoViewerHeader(name: String, count: String?, onClose: () -> Unit) {
+private fun PhotoZoomControls(
+    zoom: PhotoZoomState, modifier: Modifier = Modifier, compact: Boolean, cramped: Boolean,
+) {
+    val resetDescription = stringResource(R.string.photo_zoom_reset)
     Row(
-        modifier = Modifier.fillMaxWidth().padding(start = 20.dp, end = 12.dp, top = 12.dp),
+        modifier = modifier.padding(top = if (cramped) 0.dp else if (compact) 4.dp else 8.dp,
+                bottom = if (compact) 0.dp else 4.dp)
+            .border(1.dp, Color(0xFF49454F), RoundedCornerShape(28.dp))
+            .background(Color(0xFF151318), RoundedCornerShape(28.dp))
+            .padding(horizontal = 4.dp)
+            .testTag("photo-zoom-controls"),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        PhotoZoomButton(
+            text = "−", description = stringResource(R.string.photo_zoom_out),
+            enabled = zoom.ready && zoom.enlarged,
+        ) { zoom.updateScale(zoom.scale - PhotoZoomStep) }
+        TextButton(
+            onClick = zoom::reset,
+            enabled = zoom.ready && zoom.enlarged,
+            modifier = Modifier.heightIn(min = 48.dp).widthIn(min = 68.dp)
+                .testTag("photo-zoom-reset")
+                .semantics { contentDescription = resetDescription },
+        ) {
+            Text(stringResource(R.string.photo_zoom_percent, (zoom.scale * 100).roundToInt()),
+                color = Color.White, style = MaterialTheme.typography.labelLarge)
+        }
+        PhotoZoomButton(
+            text = "+", description = stringResource(R.string.photo_zoom_in),
+            enabled = zoom.ready && zoom.scale < MaximumPhotoZoom,
+        ) { zoom.updateScale(zoom.scale + PhotoZoomStep) }
+    }
+}
+
+@Composable
+private fun PhotoZoomButton(text: String, description: String, enabled: Boolean, onClick: () -> Unit) {
+    IconButton(onClick = onClick, enabled = enabled,
+        modifier = Modifier.size(48.dp).semantics { contentDescription = description }) {
+        Text(text, color = if (enabled) Color.White else Color(0xFF79747E), fontSize = 24.sp)
+    }
+}
+
+@Composable
+private fun ZoomablePhoto(
+    photo: RestaurantPhoto,
+    restaurantName: String,
+    index: Int,
+    photoCount: Int,
+    zoom: PhotoZoomState,
+    active: Boolean,
+    compact: Boolean,
+) {
+    val description = stringResource(R.string.photo_zoom_description, (zoom.scale * 100).roundToInt())
+    val reset = stringResource(R.string.photo_zoom_reset)
+    val panLeft = stringResource(R.string.photo_zoom_pan_left)
+    val panRight = stringResource(R.string.photo_zoom_pan_right)
+    val panUp = stringResource(R.string.photo_zoom_pan_up)
+    val panDown = stringResource(R.string.photo_zoom_pan_down)
+    Box(
+        modifier = Modifier.fillMaxSize().padding(vertical = if (compact) 0.dp else 12.dp)
+            .clipToBounds()
+            .onSizeChanged(zoom::updateViewport)
+            .photoZoomGestures(zoom)
+            .then(if (active) Modifier.testTag("photo-zoom-viewport") else Modifier)
+            .semantics {
+                stateDescription = description
+                progressBarRangeInfo = ProgressBarRangeInfo(zoom.scale, 1f..MaximumPhotoZoom)
+                this[PhotoPanOffsetKey] = zoom.offset
+                this[PhotoPanLimitKey] = zoom.panLimit
+                if (zoom.ready) {
+                    setProgress { zoom.updateScale(it); true }
+                    if (zoom.enlarged) {
+                        val limit = zoom.panLimit
+                        customActions = buildList {
+                            add(CustomAccessibilityAction(reset) { zoom.reset(); true })
+                            if (limit.x > 0f) {
+                                add(CustomAccessibilityAction(panLeft) { zoom.panBy(Offset(-limit.x / 2f, 0f)); true })
+                                add(CustomAccessibilityAction(panRight) { zoom.panBy(Offset(limit.x / 2f, 0f)); true })
+                            }
+                            if (limit.y > 0f) {
+                                add(CustomAccessibilityAction(panUp) { zoom.panBy(Offset(0f, -limit.y / 2f)); true })
+                                add(CustomAccessibilityAction(panDown) { zoom.panBy(Offset(0f, limit.y / 2f)); true })
+                            }
+                        }
+                    }
+                }
+            },
+    ) {
+        key(zoom) {
+            RestaurantPhotoImage(
+                photo = photo,
+                contentDescription = stringResource(
+                    R.string.photo_viewer_photo_description, restaurantName, index + 1, photoCount,
+                ),
+                contentScale = ContentScale.Fit,
+                modifier = Modifier.fillMaxSize().graphicsLayer {
+                    scaleX = zoom.scale
+                    scaleY = zoom.scale
+                    translationX = zoom.offset.x
+                    translationY = zoom.offset.y
+                },
+                onStatusChanged = { zoom.updateReady(it == PhotoLoadStatus.Ready) },
+                onIntrinsicSizeChanged = zoom::updateImage,
+            )
+        }
+    }
+}
+
+@Composable
+private fun PhotoViewerHeader(name: String, count: String?, onClose: () -> Unit, compact: Boolean = false) {
+    Row(
+        modifier = Modifier.fillMaxWidth().padding(start = 20.dp, end = 12.dp, top = if (compact) 4.dp else 12.dp),
         verticalAlignment = Alignment.Top,
     ) {
         Column(Modifier.weight(1f).padding(top = 4.dp)) {
@@ -337,7 +482,7 @@ private fun PhotoViewerHeader(name: String, count: String?, onClose: () -> Unit)
                 text = name,
                 color = Color.White,
                 style = MaterialTheme.typography.titleMedium,
-                maxLines = 2,
+                maxLines = if (compact) 1 else 2,
                 overflow = TextOverflow.Ellipsis,
             )
             count?.let {
