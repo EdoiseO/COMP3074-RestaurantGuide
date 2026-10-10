@@ -1,7 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="destination_back">← Back</string>
-    <string name="destination_details_title">Restaurant Details</string>
     <string name="destination_add_title">Add restaurant</string>
     <string name="destination_about_title">About</string>
     <string name="destination_save">Save</string>

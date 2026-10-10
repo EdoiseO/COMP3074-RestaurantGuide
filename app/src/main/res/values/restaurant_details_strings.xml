@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="details_delete">Delete</string>
+    <string name="details_edit">Edit</string>
+    <string name="details_my_photos">My photos</string>
+    <string name="details_add_photo">+ photo</string>
+    <string name="details_photo_number">Photo %1$d of %2$s</string>
+    <string name="details_view_photo">View photo</string>
+    <string name="details_full_map">View full map</string>
+    <string name="details_share_email">Share by email</string>
+    <string name="details_notes">Notes</string>
+    <string name="details_notes_empty">Add your visit notes here.</string>
+    <string name="details_edit_notes">Edit visit notes</string>
+    <string name="details_visit_notes">Visit notes</string>
+    <string name="details_notes_hint">What did you order? Would you get it again?</string>
+    <string name="details_cancel">Cancel</string>
+    <string name="details_delete_title">Delete restaurant?</string>
+    <string name="details_delete_body">This removes the restaurant\nand its saved notes.</string>
+    <string name="details_rating_accessibility">Your rating: %1$d/5 stars</string>
+    <string name="details_not_added">Not added</string>
+    <string name="details_add_visit_photo">Add a visit photo</string>
+    <string name="details_choose_photo">+ Choose photo</string>
+    <string name="details_selected_photo">Selected visit photo</string>
+    <string name="details_caption">Caption (optional)</string>
+    <string name="details_caption_hint">Describe this photo…</string>
+</resources>

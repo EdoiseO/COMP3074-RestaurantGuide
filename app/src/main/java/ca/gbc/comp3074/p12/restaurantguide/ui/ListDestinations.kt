@@ -1,15 +1,11 @@
 package ca.gbc.comp3074.p12.restaurantguide.ui
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
-import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -30,81 +26,13 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import ca.gbc.comp3074.p12.restaurantguide.R
-import ca.gbc.comp3074.p12.restaurantguide.data.Restaurant
 import java.util.Locale
-
-@OptIn(ExperimentalLayoutApi::class)
-@Composable
-fun RestaurantDetailsEntry(restaurant: Restaurant, onBack: () -> Unit) {
-    ListDestination(
-        title = stringResource(R.string.destination_details_title),
-        onBack = onBack,
-    ) {
-        restaurant.photoRes?.let { photoRes ->
-            Image(
-                painter = painterResource(photoRes),
-                contentDescription = stringResource(
-                    R.string.destination_restaurant_photo,
-                    restaurant.name,
-                ),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(200.dp)
-                    .clip(RoundedCornerShape(20.dp)),
-                contentScale = ContentScale.Crop,
-            )
-        }
-        Text(
-            text = restaurant.name,
-            style = MaterialTheme.typography.headlineSmall,
-            color = MaterialTheme.colorScheme.primary,
-            modifier = Modifier.semantics { heading() },
-        )
-        if (restaurant.rating > 0) {
-            Text(
-                text = stringResource(R.string.destination_rating, restaurant.rating),
-                style = MaterialTheme.typography.titleMedium,
-            )
-        }
-        if (restaurant.description.isNotBlank()) {
-            Text(restaurant.description, style = MaterialTheme.typography.bodyLarge)
-        }
-        if (restaurant.tags.isNotEmpty()) {
-            FlowRow(
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                restaurant.tags.forEach { tag ->
-                    Surface(
-                        shape = RoundedCornerShape(10.dp),
-                        color = MaterialTheme.colorScheme.surfaceVariant,
-                    ) {
-                        Text(
-                            text = tag,
-                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 8.dp),
-                            style = MaterialTheme.typography.labelLarge,
-                        )
-                    }
-                }
-            }
-        }
-        if (restaurant.address.isNotBlank()) {
-            RestaurantContact(stringResource(R.string.destination_address), restaurant.address)
-        }
-        if (restaurant.phone.isNotBlank()) {
-            RestaurantContact(stringResource(R.string.destination_phone), restaurant.phone)
-        }
-    }
-}
 
 @Composable
 fun AddRestaurantEntry(
@@ -207,18 +135,6 @@ fun AboutEntry(onBack: () -> Unit) {
             modifier = Modifier.semantics { heading() },
         )
         Text(stringResource(R.string.destination_team_names))
-    }
-}
-
-@Composable
-private fun RestaurantContact(label: String, value: String) {
-    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-        Text(
-            text = label,
-            color = MaterialTheme.colorScheme.primary,
-            style = MaterialTheme.typography.titleMedium,
-        )
-        Text(value, style = MaterialTheme.typography.bodyLarge)
     }
 }
 

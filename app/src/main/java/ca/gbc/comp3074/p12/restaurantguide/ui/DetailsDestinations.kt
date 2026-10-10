@@ -1,0 +1,353 @@
+package ca.gbc.comp3074.p12.restaurantguide.ui
+
+import android.content.ActivityNotFoundException
+import android.content.Context
+import android.content.Intent
+import android.net.Uri
+import androidx.core.net.toUri
+import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.foundation.text.selection.SelectionContainer
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardCapitalization
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import ca.gbc.comp3074.p12.restaurantguide.R
+import ca.gbc.comp3074.p12.restaurantguide.data.Restaurant
+import ca.gbc.comp3074.p12.restaurantguide.data.restaurantShareBody
+import java.util.Locale
+
+/** Prefilled session edit. The full shared Add/Edit form and fractional rating are later sections. */
+@Composable
+fun RestaurantEditEntry(
+    restaurant: Restaurant,
+    onBack: () -> Unit,
+    onSave: (Restaurant) -> Unit,
+) {
+    var name by rememberSaveable(restaurant.id) { mutableStateOf(restaurant.name) }
+    var description by rememberSaveable(restaurant.id) { mutableStateOf(restaurant.description) }
+    var tags by rememberSaveable(restaurant.id) { mutableStateOf(restaurant.tags.joinToString(", ")) }
+    var address by rememberSaveable(restaurant.id) { mutableStateOf(restaurant.address) }
+    var phone by rememberSaveable(restaurant.id) { mutableStateOf(restaurant.phone) }
+    var rating by rememberSaveable(restaurant.id) { mutableIntStateOf(restaurant.rating) }
+    var nameError by rememberSaveable(restaurant.id) { mutableStateOf(false) }
+    BackHandler(onBack = onBack)
+
+    Scaffold { contentPadding ->
+        Column(Modifier.fillMaxSize().padding(contentPadding)) {
+            Row(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                TextButton(onClick = onBack, modifier = Modifier.testTag("edit-back")) {
+                    Text("← ${stringResource(R.string.details_edit_title)}", fontSize = 16.sp)
+                }
+                Box(Modifier.weight(1f))
+                TextButton(
+                    onClick = {
+                        nameError = name.isBlank()
+                        if (!nameError) {
+                            val parsedTags = tags.split(',').map(String::trim)
+                                .filter(String::isNotEmpty)
+                                .distinctBy { it.lowercase(Locale.ROOT) }
+                            onSave(restaurant.copy(
+                                name = name.trim(), description = description.trim(),
+                                tags = parsedTags, address = address.trim(), phone = phone.trim(),
+                                rating = rating,
+                                mapRes = restaurant.mapRes.takeIf { address.trim() == restaurant.address },
+                                fullMapRes = restaurant.fullMapRes.takeIf { address.trim() == restaurant.address },
+                                listSummary = parsedTags.take(3).joinToString(" • ")
+                                    .ifBlank { description.trim() },
+                            ))
+                        }
+                    },
+                    modifier = Modifier.testTag("edit-save"),
+                ) { Text(stringResource(R.string.destination_save)) }
+            }
+            Column(
+                modifier = Modifier.fillMaxWidth().weight(1f)
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 20.dp, vertical = 8.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                OutlinedTextField(
+                    value = name, onValueChange = {
+                        name = it
+                        if (it.isNotBlank()) nameError = false
+                    },
+                    label = { Text(stringResource(R.string.destination_restaurant_name)) },
+                    modifier = Modifier.fillMaxWidth().testTag("edit-name"),
+                    shape = RoundedCornerShape(12.dp), singleLine = true,
+                    isError = nameError,
+                    supportingText = if (nameError) {
+                        { Text(stringResource(R.string.destination_name_required)) }
+                    } else null,
+                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words),
+                )
+                OutlinedTextField(
+                    value = description, onValueChange = { description = it },
+                    label = { Text(stringResource(R.string.destination_description)) },
+                    modifier = Modifier.fillMaxWidth().testTag("edit-description"),
+                    shape = RoundedCornerShape(12.dp), minLines = 3,
+                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Sentences),
+                )
+                OutlinedTextField(
+                    value = tags, onValueChange = { tags = it },
+                    label = { Text(stringResource(R.string.destination_tags)) },
+                    supportingText = { Text(stringResource(R.string.destination_tags_help)) },
+                    modifier = Modifier.fillMaxWidth().testTag("edit-tags"),
+                    shape = RoundedCornerShape(12.dp),
+                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words),
+                )
+                Text(
+                    stringResource(R.string.destination_your_rating),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                )
+                Row(horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                    (1..5).forEach { value ->
+                        FilterChip(
+                            selected = rating == value,
+                            onClick = { rating = value },
+                            label = { Text(stringResource(R.string.destination_rating, value)) },
+                            modifier = Modifier.testTag("edit-rating-$value"),
+                        )
+                    }
+                }
+                OutlinedTextField(
+                    value = address, onValueChange = { address = it },
+                    label = { Text(stringResource(R.string.destination_address)) },
+                    modifier = Modifier.fillMaxWidth().testTag("edit-address"),
+                    shape = RoundedCornerShape(12.dp), minLines = 2,
+                    keyboardOptions = KeyboardOptions(capitalization = KeyboardCapitalization.Words),
+                )
+                OutlinedTextField(
+                    value = phone, onValueChange = { phone = it },
+                    label = { Text(stringResource(R.string.destination_phone)) },
+                    modifier = Modifier.fillMaxWidth().testTag("edit-phone"),
+                    shape = RoundedCornerShape(12.dp),
+                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone),
+                )
+            }
+        }
+    }
+}
+
+/** Real static images retain their attribution; fallback streets intentionally do not claim geocoding. */
+@Composable
+fun RestaurantMapPreview(restaurant: Restaurant, modifier: Modifier = Modifier) {
+    val mapDescription = stringResource(R.string.details_map_preview_description, restaurant.name)
+    if (restaurant.mapRes != null) {
+        Image(
+            painter = painterResource(restaurant.mapRes),
+            contentDescription = mapDescription,
+            modifier = modifier.clip(RoundedCornerShape(24.dp)),
+            contentScale = ContentScale.Fit,
+        )
+    } else {
+        val illustrativeDescription = stringResource(
+            R.string.details_map_illustrative_description, restaurant.name,
+            restaurant.address.ifBlank { stringResource(R.string.details_map_missing_address) },
+        )
+        Box(
+            modifier = modifier.clip(RoundedCornerShape(24.dp))
+                .background(Color(0xFFF1F2EF))
+                .semantics { contentDescription = illustrativeDescription },
+        ) {
+            Canvas(Modifier.fillMaxSize()) {
+                drawRect(Color(0xFFDDEBDD), topLeft = Offset(size.width * .03f, size.height * .06f),
+                    size = androidx.compose.ui.geometry.Size(size.width * .28f, size.height * .38f))
+                drawRect(Color(0xFFE3EAF4), topLeft = Offset(size.width * .74f, 0f),
+                    size = androidx.compose.ui.geometry.Size(size.width * .26f, size.height))
+                val road = Color.White
+                val roadEdge = Color(0xFFD0D4D0)
+                listOf(.25f, .57f, .80f).forEach { x ->
+                    drawLine(roadEdge, Offset(size.width*x, 0f), Offset(size.width*(x-.15f), size.height), 19.dp.toPx())
+                    drawLine(road, Offset(size.width*x, 0f), Offset(size.width*(x-.15f), size.height), 15.dp.toPx())
+                }
+                listOf(.26f, .62f).forEach { y ->
+                    drawLine(roadEdge, Offset(0f, size.height*y), Offset(size.width, size.height*(y+.09f)), 19.dp.toPx())
+                    drawLine(road, Offset(0f, size.height*y), Offset(size.width, size.height*(y+.09f)), 15.dp.toPx())
+                }
+            }
+            Icon(
+                painterResource(R.drawable.ic_map_pin), contentDescription = null,
+                tint = Color(0xFFE94235),
+                modifier = Modifier.align(Alignment.Center).size(36.dp),
+            )
+            Surface(
+                color = Color.White.copy(alpha = .94f), shape = RoundedCornerShape(8.dp),
+                modifier = Modifier.align(Alignment.TopStart).padding(12.dp),
+            ) {
+                Text(stringResource(R.string.details_map_preview_label),
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 6.dp),
+                    style = MaterialTheme.typography.labelMedium)
+            }
+        }
+    }
+}
+
+fun getDirectionsUri(restaurant: Restaurant): Uri = (
+    "https://www.google.com/maps/dir/?api=1&destination=" +
+        Uri.encode("${restaurant.name}, ${restaurant.address}")
+).toUri()
+
+@Composable
+fun RestaurantMapEntry(restaurant: Restaurant, onBack: () -> Unit) {
+    val context = LocalContext.current
+    var directionsUnavailable by rememberSaveable { mutableStateOf(false) }
+    BackHandler(onBack = onBack)
+    Scaffold { contentPadding ->
+        Column(Modifier.fillMaxSize().padding(contentPadding)) {
+            Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp),
+                verticalAlignment = Alignment.CenterVertically) {
+                TextButton(onClick = onBack, modifier = Modifier.testTag("map-back")) {
+                    Text(stringResource(R.string.destination_back))
+                }
+                Text(stringResource(R.string.details_map_title),
+                    modifier = Modifier.padding(start = 8.dp),
+                    style = MaterialTheme.typography.titleMedium,
+                    color = MaterialTheme.colorScheme.primary)
+            }
+            Box(Modifier.fillMaxWidth().weight(1f).padding(horizontal = 20.dp, vertical = 8.dp)) {
+                RestaurantMapPreview(
+                    restaurant.copy(mapRes = restaurant.fullMapRes ?: restaurant.mapRes),
+                    Modifier.fillMaxSize().testTag("full-map-preview"),
+                )
+            }
+            Column(
+                modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                Text(restaurant.name, style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold, color = Color(0xFF4F378A),
+                    modifier = Modifier.semantics { heading() })
+                if (restaurant.mapRes == null) {
+                    Text(stringResource(R.string.details_map_illustrative_note),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant)
+                }
+                Text(restaurant.address.ifBlank { stringResource(R.string.details_map_missing_address) },
+                    style = MaterialTheme.typography.bodyMedium)
+                Button(
+                    onClick = {
+                        try {
+                            context.startActivity(Intent(Intent.ACTION_VIEW, getDirectionsUri(restaurant)))
+                        } catch (_: ActivityNotFoundException) {
+                            directionsUnavailable = true
+                        }
+                    },
+                    enabled = restaurant.address.isNotBlank(),
+                    modifier = Modifier.fillMaxWidth().testTag("get-directions"),
+                    shape = RoundedCornerShape(24.dp),
+                ) {
+                    Icon(painterResource(R.drawable.ic_map_pin), contentDescription = null,
+                        modifier = Modifier.size(20.dp))
+                    Text(stringResource(R.string.details_get_directions), Modifier.padding(start = 8.dp))
+                }
+            }
+        }
+    }
+    if (directionsUnavailable) {
+        AlertDialog(
+            onDismissRequest = { directionsUnavailable = false },
+            title = { Text(stringResource(R.string.details_directions_unavailable_title)) },
+            text = { Text(stringResource(R.string.details_directions_unavailable_message)) },
+            confirmButton = { TextButton(onClick = { directionsUnavailable = false }) {
+                Text(stringResource(R.string.details_got_it))
+            } },
+        )
+    }
+}
+
+fun restaurantEmailIntent(restaurant: Restaurant): Intent = Intent(Intent.ACTION_SENDTO).apply {
+    data = "mailto:".toUri()
+    putExtra(Intent.EXTRA_SUBJECT, restaurant.name)
+    putExtra(Intent.EXTRA_TEXT, restaurantShareBody(restaurant))
+}
+
+/** Starts only an email draft. If the device has no mail handler, display a copyable preview. */
+@Composable
+fun RestaurantEmailEntry(restaurant: Restaurant, onBack: () -> Unit) {
+    val context: Context = LocalContext.current
+    var unavailable by rememberSaveable(restaurant.id) { mutableStateOf(false) }
+    var attempted by rememberSaveable(restaurant.id) { mutableStateOf(false) }
+    BackHandler(onBack = onBack)
+    LaunchedEffect(restaurant.id) {
+        if (!attempted) {
+            attempted = true
+            try {
+                context.startActivity(restaurantEmailIntent(restaurant))
+                onBack()
+            } catch (_: ActivityNotFoundException) {
+                unavailable = true
+            }
+        } else if (!unavailable) {
+            // A restored activity may have already handed the draft to an external app.
+            onBack()
+        }
+    }
+    if (unavailable) {
+        AlertDialog(
+            onDismissRequest = onBack,
+            modifier = Modifier.testTag("email-preview"),
+            title = { Text(stringResource(R.string.details_email_unavailable_title)) },
+            text = {
+                Column(Modifier.height(360.dp).verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Text(stringResource(R.string.details_email_unavailable_message))
+                    SelectionContainer { Text(restaurantShareBody(restaurant)) }
+                }
+            },
+            confirmButton = { TextButton(onClick = onBack) {
+                Text(stringResource(R.string.details_email_close))
+            } },
+        )
+    }
+}

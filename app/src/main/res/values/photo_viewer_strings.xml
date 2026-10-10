@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="photo_viewer_close">Close photos</string>
+    <string name="photo_viewer_count">%1$d / %2$d</string>
+    <string name="photo_viewer_previous">Previous photo</string>
+    <string name="photo_viewer_next">Next photo</string>
+    <string name="photo_viewer_photo_description">%1$s, photo %2$d of %3$d</string>
+    <string name="photo_viewer_thumbnail_description">View photo %1$d of %2$d</string>
+    <string name="photo_viewer_unavailable">Photo unavailable</string>
+    <string name="photo_viewer_loading">Loading photo</string>
+    <string name="photo_viewer_empty">No photos yet</string>
+</resources>

@@ -18,7 +18,12 @@ object DemoRestaurants {
             tags = listOf("Shawarma", "Kebabs", "Falafel", "Souvlaki", "Poutine", "Baklava"),
             rating = 4,
             photoRes = R.drawable.two_brothers_meal,
+            mapRes = R.drawable.two_brothers_map,
+            fullMapRes = R.drawable.two_brothers_full_map,
             listSummary = "Shawarma • Kebabs • Falafel",
+            // Existing Figma sample gallery; official menu images illustrate food, not personal visits.
+            galleryRes = listOf(R.drawable.two_brothers_meal, R.drawable.two_brothers_chicken,
+                R.drawable.two_brothers_falafel, R.drawable.two_brothers_baklava),
         ),
         Restaurant(
             id = 2,
@@ -31,6 +36,8 @@ object DemoRestaurants {
             tags = listOf("Turkish", "Stuffed mussels", "Kokorec", "Meatballs", "Rice dishes", "Ayran"),
             rating = 5,
             photoRes = R.drawable.midyeci_riza,
+            mapRes = R.drawable.midyeci_riza_map,
+            fullMapRes = R.drawable.midyeci_riza_full_map,
             listSummary = "Turkish • Stuffed mussels • Kokorec",
         ),
         Restaurant(
@@ -45,6 +52,8 @@ object DemoRestaurants {
             tags = listOf("Mexican", "Bakery", "Tacos", "Birria", "Quesadillas", "Tamales"),
             rating = 3,
             photoRes = R.drawable.la_unica,
+            mapRes = R.drawable.la_unica_map,
+            fullMapRes = R.drawable.la_unica_full_map,
             listSummary = "Mexican bakery • Tacos • Birria",
         ),
     )

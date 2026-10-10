@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="details_edit_title">Edit restaurant</string>
+    <string name="details_map_title">Full-Screen Map</string>
+    <string name="details_map_preview_label">Map preview</string>
+    <string name="details_map_preview_description">Map preview for %1$s</string>
+    <string name="details_map_illustrative_description">Illustrative map preview for %1$s. Saved address: %2$s.</string>
+    <string name="details_map_illustrative_note">Illustrative preview · saved address below</string>
+    <string name="details_map_missing_address">Add an address to get directions.</string>
+    <string name="details_get_directions">Get directions</string>
+    <string name="details_directions_unavailable_title">Directions unavailable</string>
+    <string name="details_directions_unavailable_message">No app is available to open directions. Try again after installing a map app or browser.</string>
+    <string name="details_email_unavailable_title">Email app unavailable</string>
+    <string name="details_email_unavailable_message">No email app is available. You can copy the restaurant details below.</string>
+    <string name="details_email_close">Close</string>
+    <string name="details_got_it">Got it</string>
+</resources>

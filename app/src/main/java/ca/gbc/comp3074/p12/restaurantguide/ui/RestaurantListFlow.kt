@@ -2,6 +2,7 @@ package ca.gbc.comp3074.p12.restaurantguide.ui
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -18,18 +19,28 @@ import kotlinx.coroutines.launch
 
 private val RestaurantsSaver = listSaver<List<Restaurant>, Any>(
     save = { records ->
-        records.flatMap { r ->
-            listOf(r.id, r.name, r.description, r.address, r.phone, ArrayList(r.tags), r.rating, r.photoRes ?: 0, r.listSummary)
+        listOf("restaurants-v2") + records.flatMap { r ->
+            listOf(r.id, r.name, r.description, r.address, r.phone, ArrayList(r.tags), r.rating,
+                r.photoRes ?: 0, r.listSummary, r.notes, ArrayList(r.galleryRes), r.mapRes ?: 0,
+                ArrayList(r.photoUris), ArrayList(r.photoCaptions), r.fullMapRes ?: 0)
         }
     },
     restore = { values ->
-        values.chunked(9).map { v ->
+        val extended = values.firstOrNull() == "restaurants-v2"
+        val fields = if (extended) values.drop(1) else values
+        fields.chunked(if (extended) 15 else 9).map { v ->
             Restaurant(
                 id = v[0] as Int, name = v[1] as String, description = v[2] as String,
                 address = v[3] as String, phone = v[4] as String,
                 tags = (v[5] as List<*>).map { it as String }, rating = v[6] as Int,
                 photoRes = (v[7] as Int).takeIf { it != 0 },
                 listSummary = v[8] as String,
+                notes = if (extended) v[9] as String else "",
+                galleryRes = if (extended) (v[10] as List<*>).map { it as Int } else emptyList(),
+                mapRes = if (extended) (v[11] as Int).takeIf { it != 0 } else null,
+                photoUris = if (extended) (v[12] as List<*>).map { it as String } else emptyList(),
+                photoCaptions = if (extended) (v[13] as List<*>).map { it as String } else emptyList(),
+                fullMapRes = if (extended) (v[14] as Int).takeIf { it != 0 } else null,
             )
         }
     },
@@ -46,6 +57,7 @@ fun RestaurantListFlow(initialRestaurants: List<Restaurant> = DemoRestaurants.re
     var selectedId by rememberSaveable { mutableIntStateOf(0) }
     val listState = rememberLazyListState()
     val filtersState = rememberLazyListState()
+    val detailsScrollState = rememberScrollState()
     val scope = rememberCoroutineScope()
     val focusManager = LocalFocusManager.current
     val keyboard = LocalSoftwareKeyboardController.current
@@ -54,10 +66,37 @@ fun RestaurantListFlow(initialRestaurants: List<Restaurant> = DemoRestaurants.re
         keyboard?.hide()
         route = destination
     }
-    BackHandler(enabled = route != "list") { navigate("list") }
+    val selectedRestaurant = restaurants.firstOrNull { it.id == selectedId }
+    val updateRestaurant: (Restaurant) -> Unit = { changed ->
+        restaurants = restaurants.map { if (it.id == changed.id) changed else it }
+    }
+    BackHandler(enabled = route != "list") {
+        navigate(if (route in listOf("edit", "map", "email")) "details" else "list")
+    }
     when (route) {
-        "details" -> restaurants.firstOrNull { it.id == selectedId }?.let {
-            RestaurantDetailsEntry(it, onBack = { navigate("list") })
+        "details" -> selectedRestaurant?.let {
+            RestaurantDetailsScreen(
+                it, detailsScrollState, onBack = { navigate("list") },
+                onEdit = { navigate("edit") },
+                onDelete = {
+                    restaurants = restaurants.filterNot { record -> record.id == selectedId }
+                    navigate("list")
+                },
+                onUpdate = updateRestaurant,
+                onMap = { navigate("map") }, onEmail = { navigate("email") },
+            )
+        }
+        "edit" -> selectedRestaurant?.let {
+            RestaurantEditEntry(it, onBack = { navigate("details") }, onSave = { changed ->
+                updateRestaurant(changed)
+                navigate("details")
+            })
+        }
+        "map" -> selectedRestaurant?.let {
+            RestaurantMapEntry(it, onBack = { navigate("details") })
+        }
+        "email" -> selectedRestaurant?.let {
+            RestaurantEmailEntry(it, onBack = { navigate("details") })
         }
         "add" -> AddRestaurantEntry(
             onBack = { navigate("list") },
@@ -87,7 +126,11 @@ fun RestaurantListFlow(initialRestaurants: List<Restaurant> = DemoRestaurants.re
             },
             onAllClick = { selectedTags = emptyList(); scope.launch { listState.scrollToItem(0) } },
             onClearSearchAndFilters = { query = ""; selectedTags = emptyList() },
-            onRestaurantClick = { selectedId = it.id; navigate("details") },
+            onRestaurantClick = {
+                selectedId = it.id
+                scope.launch { detailsScrollState.scrollTo(0) }
+                navigate("details")
+            },
             onAddClick = { navigate("add") },
             onAboutClick = { navigate("about") },
             listState = listState,
