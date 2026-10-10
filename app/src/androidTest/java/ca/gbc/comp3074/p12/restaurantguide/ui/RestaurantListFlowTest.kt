@@ -15,6 +15,7 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performImeAction
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performTextInput
 import androidx.test.platform.app.InstrumentationRegistry
 import ca.gbc.comp3074.p12.restaurantguide.ui.theme.RestaurantGuideTheme
@@ -99,9 +100,17 @@ class RestaurantListFlowTest {
         snapshot("third-card")
         compose.onNodeWithTag("restaurant-card-3").performClick()
         compose.onNodeWithText("La Unica").assertIsDisplayed()
-        compose.onNodeWithText("Mexican bakery and restaurant").assertIsDisplayed()
+        compose.onNodeWithText("Mexican bakery and taqueria", substring = true).assertIsDisplayed()
+        compose.onNodeWithText("850 Wilson Ave, North York, ON M3K 1E5").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText("437-216-6130").performScrollTo().assertIsDisplayed()
+        snapshot("la-unica-details")
         compose.onNodeWithText("← Back").performClick()
         compose.onNodeWithTag("restaurant-card-3").assertIsDisplayed()
+        compose.onNodeWithTag("filter-tag-Turkish").performClick()
+        compose.onNodeWithTag("restaurant-card-2").performClick()
+        compose.onNodeWithText("954 Wilson Ave, North York, ON M3K 1E7").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText("416-398-3884").performScrollTo().assertIsDisplayed()
+        snapshot("midyeci-details")
     }
 
     private fun assertSearchState() {

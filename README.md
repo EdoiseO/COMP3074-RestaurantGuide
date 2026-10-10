@@ -10,6 +10,8 @@ The Android prototype implements the purple Splash Screen and Restaurant List wi
 
 Splash startup verification passed previously. The refined List debug build, nine unit tests and four Compose device tests passed; lint reports zero errors and three warnings. See [List verification](docs/restaurant-list-verification.md). All three original photos are bundled; the circular Add button, search field, compact heading, purple colors and saved count wording follow the current Figma Home design. Live search, tag filters and Back state remain working. Demo data and changes are held in saved UI state; durable storage, full CRUD, maps/directions, gallery, notes and email handoff remain to implement. The current Figma/PNG wireframes are the visual reference.
 
+Midyeci Riza and La Unica’s Wilson entries include researched addresses, phone numbers, menu descriptions and food tags. See [verified sources and photo references](docs/demo-restaurant-research.md). Their existing stars are sample personal ratings.
+
 **Phillip Onofua is building the UI prototype alone.** Follow the [solo prototype build sequence](docs/prototype-build-breakdown.md). The approved project team and broader responsibilities remain unchanged in [development-plan.md](docs/development-plan.md).
 
 - [Figma design](https://www.figma.com/design/8Z8T16iL2SBTzZm6pUShAA)

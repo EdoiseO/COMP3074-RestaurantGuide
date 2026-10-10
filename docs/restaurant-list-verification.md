@@ -23,6 +23,8 @@ Testing used a task-owned, read-only Pixel_7 emulator with 1.5 GB guest RAM, two
 
 Stop the task-owned emulator immediately after testing. Keep the student’s Android Studio, shared adb server and unrelated work running.
 
+The later October 10 [restaurant research update](demo-restaurant-research.md) adds verified Wilson Avenue contacts, longer descriptions and menu tags for Midyeci Riza and La Unica. Fresh app/test builds, all nine unit tests and all four device tests passed again. The Details/Back test now opens both entries and scrolls to each verified address/phone; both screenshots were visually reviewed. Live search, OR filters and restored state remain covered. [Research-update receipts](../../../outputs/2026-10-10-restaurant-demo-research/) preserve the run and cleanup evidence. Five official food/preparation photo references are saved outside the repository; no new website media were bundled into the app.
+
 To repeat the checks with a suitable connected test device:
 
 ```sh
