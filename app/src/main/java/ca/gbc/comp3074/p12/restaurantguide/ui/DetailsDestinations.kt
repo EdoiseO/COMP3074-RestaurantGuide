@@ -24,7 +24,6 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.selection.SelectionContainer
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -71,7 +70,7 @@ fun RestaurantEditEntry(restaurant: Restaurant, onBack: () -> Unit, onSave: (Res
 
 /** Real static images retain their attribution; fallback streets intentionally do not claim geocoding. */
 @Composable
-fun RestaurantMapPreview(restaurant: Restaurant, modifier: Modifier = Modifier) {
+fun RestaurantMapPreview(restaurant: Restaurant, modifier: Modifier = Modifier, showPreviewLabel: Boolean = true) {
     val mapDescription = stringResource(R.string.details_map_preview_description, restaurant.name)
     if (restaurant.mapRes != null) {
         Image(
@@ -111,7 +110,7 @@ fun RestaurantMapPreview(restaurant: Restaurant, modifier: Modifier = Modifier) 
                 tint = Color(0xFFE94235),
                 modifier = Modifier.align(Alignment.Center).size(36.dp),
             )
-            Surface(
+            if (showPreviewLabel) Surface(
                 color = Color.White.copy(alpha = .94f), shape = RoundedCornerShape(8.dp),
                 modifier = Modifier.align(Alignment.TopStart).padding(12.dp),
             ) {
@@ -127,74 +126,6 @@ fun getDirectionsUri(restaurant: Restaurant): Uri = (
     "https://www.google.com/maps/dir/?api=1&destination=" +
         Uri.encode("${restaurant.name}, ${restaurant.address}")
 ).toUri()
-
-@Composable
-fun RestaurantMapEntry(restaurant: Restaurant, onBack: () -> Unit) {
-    val context = LocalContext.current
-    var directionsUnavailable by rememberSaveable { mutableStateOf(false) }
-    BackHandler(onBack = onBack)
-    Scaffold { contentPadding ->
-        Column(Modifier.fillMaxSize().padding(contentPadding)) {
-            Row(Modifier.fillMaxWidth().padding(horizontal = 12.dp, vertical = 4.dp),
-                verticalAlignment = Alignment.CenterVertically) {
-                TextButton(onClick = onBack, modifier = Modifier.testTag("map-back")) {
-                    Text(stringResource(R.string.destination_back))
-                }
-                Text(stringResource(R.string.details_map_title),
-                    modifier = Modifier.padding(start = 8.dp),
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.primary)
-            }
-            Box(Modifier.fillMaxWidth().weight(1f).padding(horizontal = 20.dp, vertical = 8.dp)) {
-                RestaurantMapPreview(
-                    restaurant.copy(mapRes = restaurant.fullMapRes ?: restaurant.mapRes),
-                    Modifier.fillMaxSize().testTag("full-map-preview"),
-                )
-            }
-            Column(
-                modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                Text(restaurant.name, style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold, color = Color(0xFF4F378A),
-                    modifier = Modifier.semantics { heading() })
-                if (restaurant.mapRes == null) {
-                    Text(stringResource(R.string.details_map_illustrative_note),
-                        style = MaterialTheme.typography.labelMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant)
-                }
-                Text(restaurant.address.ifBlank { stringResource(R.string.details_map_missing_address) },
-                    style = MaterialTheme.typography.bodyMedium)
-                Button(
-                    onClick = {
-                        try {
-                            context.startActivity(Intent(Intent.ACTION_VIEW, getDirectionsUri(restaurant)))
-                        } catch (_: ActivityNotFoundException) {
-                            directionsUnavailable = true
-                        }
-                    },
-                    enabled = restaurant.address.isNotBlank(),
-                    modifier = Modifier.fillMaxWidth().testTag("get-directions"),
-                    shape = RoundedCornerShape(24.dp),
-                ) {
-                    Icon(painterResource(R.drawable.ic_map_pin), contentDescription = null,
-                        modifier = Modifier.size(20.dp))
-                    Text(stringResource(R.string.details_get_directions), Modifier.padding(start = 8.dp))
-                }
-            }
-        }
-    }
-    if (directionsUnavailable) {
-        AlertDialog(
-            onDismissRequest = { directionsUnavailable = false },
-            title = { Text(stringResource(R.string.details_directions_unavailable_title)) },
-            text = { Text(stringResource(R.string.details_directions_unavailable_message)) },
-            confirmButton = { TextButton(onClick = { directionsUnavailable = false }) {
-                Text(stringResource(R.string.details_got_it))
-            } },
-        )
-    }
-}
 
 fun restaurantEmailIntent(restaurant: Restaurant): Intent = Intent(Intent.ACTION_SENDTO).apply {
     data = "mailto:".toUri()

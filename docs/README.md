@@ -8,6 +8,7 @@ COMP3074 · Restaurant Guide · Team P12. These documents preserve the saved pro
 - [Restaurant List verification](restaurant-list-verification.md) — implementation scope, test results and device limits.
 - [Restaurant Details verification](restaurant-details-verification.md) — selected records, styling, actions, asset sources and runtime checks.
 - [Add/Edit and photo verification](restaurant-form-verification.md) — shared form, half-star dragging, validated photo picking and captions.
+- [Full-Screen Map verification](restaurant-map-verification.md) — native layout, selected previews, directions URL handoff and edge states.
 - [Design decisions and coverage gaps](design-decisions.md) — current prototype choices and remaining integrations.
 - [Wireframe previews](wireframes/) — exported design images.
 
