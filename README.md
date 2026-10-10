@@ -6,7 +6,9 @@ A Kotlin and Jetpack Compose Android app for saving restaurant details, finding 
 
 ## Current state
 
-This initial commit provides a separate, buildable Android starter with the purple app theme and an empty Restaurant List screen. The connected Figma demo and current PNG wireframes are included as the UI reference. Restaurant CRUD, persistence, search/filter logic, maps, directions, email sharing and the remaining app screens are still to be implemented.
+The Android working tree now implements Splash Screen with the existing purple background, centered white **Restaurant Guide** name and an automatic transition to the empty Restaurant List starter. It uses the Android-compatible launch theme without a logo. Debug build and lint passed (zero errors; three existing warnings). An API 37 emulator recording verifies the purple splash, centered white title and automatic List transition. The title delay is 1.5 seconds after the native launch screen is removed; completed splash state is retained during recreation. The connected Figma demo and current PNG wireframes remain the UI reference; Restaurant CRUD, persistence, search/filter logic, maps, directions, email sharing and the remaining screens are still to be implemented.
+
+**Phillip Onofua is building the UI prototype alone.** Follow the [solo prototype build sequence](docs/prototype-build-breakdown.md). The approved project team and broader responsibilities remain unchanged in [development-plan.md](docs/development-plan.md).
 
 - [Figma design](https://www.figma.com/design/8Z8T16iL2SBTzZm6pUShAA)
 - [Interactive Figma demo](https://www.figma.com/proto/8Z8T16iL2SBTzZm6pUShAA?starting-point-node-id=8%3A2882)
