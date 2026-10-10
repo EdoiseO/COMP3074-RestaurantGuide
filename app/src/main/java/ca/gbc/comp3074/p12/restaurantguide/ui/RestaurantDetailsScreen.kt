@@ -231,9 +231,9 @@ fun RestaurantDetailsScreen(
         Dialog(onDismissRequest = { deleteOpen = false }) {
             Surface(Modifier.fillMaxWidth(), shape = RoundedCornerShape(24.dp), color = Color.White) {
                 Column(
-                    Modifier.padding(24.dp),
+                    Modifier.padding(horizontal = 24.dp, vertical = 12.dp),
                     horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.spacedBy(12.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp),
                 ) {
                     Text(stringResource(R.string.details_delete_title), Modifier.fillMaxWidth().semantics { heading() },
                         textAlign = TextAlign.Center, fontSize = 18.sp, lineHeight = 24.sp, fontWeight = FontWeight.Bold)
