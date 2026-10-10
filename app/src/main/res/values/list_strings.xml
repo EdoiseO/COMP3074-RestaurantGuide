@@ -14,5 +14,4 @@
     <string name="list_photo">Photo of %1$s</string>
     <string name="list_photo_placeholder">Restaurant image</string>
     <plurals name="list_saved_count"><item quantity="one">%d saved restaurant</item><item quantity="other">%d saved restaurants</item></plurals>
-    <plurals name="list_result_count"><item quantity="one">%d restaurant found</item><item quantity="other">%d restaurants found</item></plurals>
 </resources>

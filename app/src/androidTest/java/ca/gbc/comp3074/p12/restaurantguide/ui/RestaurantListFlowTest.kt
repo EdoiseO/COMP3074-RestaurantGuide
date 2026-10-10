@@ -10,12 +10,12 @@ import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.junit4.StateRestorationTester
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performImeAction
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performTextInput
-import androidx.compose.ui.test.performTextClearance
 import androidx.test.platform.app.InstrumentationRegistry
 import ca.gbc.comp3074.p12.restaurantguide.ui.theme.RestaurantGuideTheme
 import org.junit.Rule
@@ -28,14 +28,19 @@ class RestaurantListFlowTest {
         val restoration = StateRestorationTester(compose)
         restoration.setContent { RestaurantGuideTheme { RestaurantListFlow() } }
         compose.onNodeWithTag("result-count").assertTextContains("3 saved restaurants")
+        compose.onNodeWithContentDescription("Clear search").performClick()
+        compose.onNodeWithTag("result-count").assertTextContains("3 saved restaurants")
         snapshot("default")
         compose.onNodeWithTag("filter-tag-Shawarma").performClick()
         compose.onNodeWithTag("filter-tag-Turkish").performClick()
-        compose.onNodeWithTag("result-count").assertTextContains("2 restaurants found")
+        compose.onNodeWithTag("result-count").assertTextContains("2 saved restaurants")
         snapshot("multiple-filters")
         compose.onNodeWithTag("restaurant-search").performTextInput("Brothers")
+        // The count must update while typing, before the keyboard's Search action.
+        compose.onNodeWithTag("result-count").assertTextContains("1 saved restaurant")
         compose.onNodeWithTag("restaurant-search").performImeAction()
-        compose.onNodeWithTag("result-count").assertTextContains("1 restaurant found")
+        snapshot("live-search")
+        compose.onNodeWithTag("result-count").assertTextContains("1 saved restaurant")
         compose.onNodeWithTag("restaurant-card-1").performClick()
         compose.onNodeWithText("Restaurant Details").assertIsDisplayed()
         compose.onNodeWithText("Two Brothers Shawarma").assertIsDisplayed()
@@ -45,8 +50,8 @@ class RestaurantListFlowTest {
         assertSearchState()
         compose.onNodeWithTag("filter-All").performClick()
         compose.onNodeWithTag("filter-All").assertIsSelected()
-        compose.onNodeWithTag("result-count").assertTextContains("1 restaurant found")
-        compose.onNodeWithTag("restaurant-search").performTextClearance()
+        compose.onNodeWithTag("result-count").assertTextContains("1 saved restaurant")
+        compose.onNodeWithContentDescription("Clear search").performClick()
         compose.onNodeWithTag("result-count").assertTextContains("3 saved restaurants")
     }
 
@@ -84,12 +89,14 @@ class RestaurantListFlowTest {
         compose.onNodeWithText("My Cafe").assertIsDisplayed()
         compose.onNodeWithText("all (tag)").assertIsDisplayed()
         compose.onNodeWithTag("filter-tag-Cafe").performClick()
-        compose.onNodeWithTag("result-count").assertTextContains("1 restaurant found")
+        compose.onNodeWithTag("result-count").assertTextContains("1 saved restaurant")
     }
 
     @Test fun scrollingOpensTheCorrectRestaurantAndBackKeepsPosition() {
         compose.setContent { RestaurantGuideTheme { RestaurantListFlow() } }
         compose.onNodeWithTag("restaurant-list").performScrollToNode(hasTestTag("restaurant-card-3"))
+        compose.onNodeWithContentDescription("Photo of La Unica").assertIsDisplayed()
+        snapshot("third-card")
         compose.onNodeWithTag("restaurant-card-3").performClick()
         compose.onNodeWithText("La Unica").assertIsDisplayed()
         compose.onNodeWithText("Mexican bakery and restaurant").assertIsDisplayed()
@@ -101,7 +108,7 @@ class RestaurantListFlowTest {
         compose.onNodeWithTag("restaurant-search").assertTextContains("Brothers")
         compose.onNodeWithTag("filter-tag-Shawarma").assertIsSelected()
         compose.onNodeWithTag("filter-tag-Turkish").assertIsSelected()
-        compose.onNodeWithTag("result-count").assertTextContains("1 restaurant found")
+        compose.onNodeWithTag("result-count").assertTextContains("1 saved restaurant")
     }
 
     private fun snapshot(name: String) {

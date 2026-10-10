@@ -26,6 +26,7 @@ object DemoRestaurants {
             phone = "",
             tags = listOf("Turkish"),
             rating = 5,
+            photoRes = R.drawable.midyeci_riza,
         ),
         Restaurant(
             id = 3,
@@ -35,6 +36,7 @@ object DemoRestaurants {
             phone = "",
             tags = listOf("Mexican"),
             rating = 3,
+            photoRes = R.drawable.la_unica,
         ),
     )
 }
