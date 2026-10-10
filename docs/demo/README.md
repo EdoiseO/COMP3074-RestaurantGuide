@@ -8,6 +8,7 @@ The [demo video (4:58)](Restaurant-Guide-UI-Prototype.mp4) uses cream background
 
 The refreshed export is 1920×1080 H.264 at 30 fps and **298.200 seconds (4:58)**. All twelve chapter titles and their order are retained; marker timestamps are rebuilt from the original scene frame counts.
 
+- [Transcript matched to the current presentation timer](transcript-timed.md) ([plain text](transcript-timed.txt)) — twelve sections with exact chapter start/end times; existing script wording retained.
 - [Separate transcript](narration.txt) — retained as requested; not displayed or spoken in the video.
 - [Historical transcript timing file](narration.srt) — retained separately from the prior export; not embedded or claimed to synchronize exactly with the refreshed video.
 - [Presentation preview](presentation-preview.png)

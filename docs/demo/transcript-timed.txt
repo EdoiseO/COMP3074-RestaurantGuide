@@ -1,0 +1,40 @@
+Restaurant Guide — Timed presentation transcript
+
+Matches the current 4:58 presentation. Times are the exact video chapter ranges; each paragraph is the existing script for that section. The video remains silent.
+
+00:00.000–00:15.033 | Splash Screen
+Restaurant Guide keeps restaurant information, ratings, photos and visit notes together, helping you remember what you ate and whether you would order it again. The purple Splash Screen introduces the application.
+
+00:15.033–00:27.500 | Restaurant List
+The Restaurant List uses scrollable cards with a photo, name and rating. Rounded corners, soft borders and purple headings make the saved restaurants easy to scan.
+
+00:27.500–00:57.067 | Restaurant List — Search restaurants
+Search restaurants updates results as you type. Select multiple tags, or All to reset them. No restaurants found provides a way to clear the search and filters.
+
+00:57.067–01:11.533 | Restaurant Details
+Restaurant Details shows the selected cover, rating, description, read-only tags, photos and contact information. Back returns to the list while preserving search and selected filters.
+
+01:11.533–01:37.267 | My photos
+My photos opens a larger gallery with captions, swiping, arrows and thumbnails. Zoom allows closer inspection. Each caption describes one photo; visit notes describe the restaurant visit.
+
+01:37.267–01:54.233 | Notes
+Edit visit notes opens a draft for the selected restaurant. Cancel discards it, and Save applies it. The rounded lavender Notes panel keeps the saved note readable.
+
+01:54.233–02:09.200 | Full-Screen Map
+View full map shows the selected static Map preview and saved address. Back returns to Details; Get directions prepares an external destination URL. Live location remains future work.
+
+02:09.200–02:31.800 | Share by email
+Share by email prepares name, address, phone numbers, rating, tags and description. Without an email app, Email app unavailable shows a copyable fallback containing the restaurant details.
+
+02:31.800–03:06.500 | Add Restaurant
+Add restaurant reuses rounded fields and clear labels. Saving without a name displays Restaurant name required. After Got it, enter the name and other details.
+
+03:06.500–03:44.633 | Add Restaurant — Your rating
+Slide across enlarged stars in half-star steps. Rating Cancel discards the selection; rating Save updates the draft. Add tag creates a custom tag before the full form is saved.
+
+03:44.633–04:40.433 | Edit Restaurant
+Edit pre-fills the saved record. Back discards changes; Save updates it. Delete asks for confirmation: Cancel keeps the record, while Delete removes it from the current session.
+
+04:40.433–04:58.200 | About
+About identifies Restaurant Guide, COMP3074, Team P12 and all four team members. This interactive UI prototype uses session data. Permanent storage, live maps and location permissions remain future work.
+

@@ -256,5 +256,80 @@
     "previous_export_sha256": "9e2a5a4b732ea195f198db33ac123fb00abc1306e59abb974e66143aa5afb171",
     "original_narrated_export_sha256": "aeed5726ba4c29bab137ba4a8ea00ea01211b8e841f188a7cb5a6a50e9eea7cb",
     "rendered_wording_matches_retained_sources": true
+  },
+  "timed_transcript": {
+    "path": "transcript-timed.txt",
+    "markdown_path": "transcript-timed.md",
+    "sha256": "e70a49cebb990d114cdbd8ba8cd981a2dc28451941582ee98f872c0287a33e80",
+    "markdown_sha256": "7b36a97ecfdc81bcf8cec72e9895d45bd7d7bdf202fa677ff6e6b5c26b3a9a31",
+    "video_sha256": "65e80acc6274de0a26cc31a40ae578e8cd757efba498d073a7ec346909ce8db9",
+    "video_duration_seconds": 298.2,
+    "sections": 12,
+    "timing_basis": "Exact millisecond chapter boundaries read from the current final MP4.",
+    "script_wording_unchanged": true,
+    "included_in_video": false,
+    "timing_scope": "Chapter-aligned reading script; no recorded voice or word/gesture alignment is claimed.",
+    "section_ranges": [
+      {
+        "id": "01-splash",
+        "start_ms": 0,
+        "end_ms": 15033
+      },
+      {
+        "id": "02-list",
+        "start_ms": 15033,
+        "end_ms": 27500
+      },
+      {
+        "id": "03-search-filter",
+        "start_ms": 27500,
+        "end_ms": 57067
+      },
+      {
+        "id": "04-details",
+        "start_ms": 57067,
+        "end_ms": 71533
+      },
+      {
+        "id": "05-gallery",
+        "start_ms": 71533,
+        "end_ms": 97267
+      },
+      {
+        "id": "06-notes",
+        "start_ms": 97267,
+        "end_ms": 114233
+      },
+      {
+        "id": "07-map",
+        "start_ms": 114233,
+        "end_ms": 129200
+      },
+      {
+        "id": "08-email",
+        "start_ms": 129200,
+        "end_ms": 151800
+      },
+      {
+        "id": "09-add-validation",
+        "start_ms": 151800,
+        "end_ms": 186500
+      },
+      {
+        "id": "10-rating-tags",
+        "start_ms": 186500,
+        "end_ms": 224633
+      },
+      {
+        "id": "11-edit-delete",
+        "start_ms": 224633,
+        "end_ms": 280433
+      },
+      {
+        "id": "12-about",
+        "start_ms": 280433,
+        "end_ms": 298200
+      }
+    ]
   }
 }
