@@ -1,6 +1,6 @@
 # Working together
 
-Accept the GitHub invitation to this private repository, then clone it and open it in Android Studio. Collaborators have ordinary write access.
+Clone this repository and open it in Android Studio. Accept your GitHub invitation to get ordinary write access.
 
 Create a short feature branch for your change and open a pull request back to `main`. Coordinate before editing the same screen or shared data files. Describe what changed, include UI screenshots when useful, and record the checks you ran. Ask another member to review before merging team changes.
 
