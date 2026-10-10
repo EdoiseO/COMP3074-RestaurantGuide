@@ -1,0 +1,143 @@
+{
+  "date": "2026-10-10",
+  "about_commit": "5198a5c0408d32a6bc307c0980b64e4409d96120",
+  "gallery_commit": "cf51b5f675b0e93fa1d6036fe6602f4be19550ca",
+  "build": "passed",
+  "unit_tests": {
+    "tests": 32,
+    "failures": 0,
+    "errors": 0,
+    "skipped": 0
+  },
+  "device_tests": {
+    "tests": 33,
+    "failures": 0,
+    "instrumentation_summary": "OK (33 tests)"
+  },
+  "lint": {
+    "errors": 0,
+    "warnings": 3,
+    "hints": 3,
+    "issues": [
+      {
+        "id": "AndroidGradlePluginVersion",
+        "severity": "Warning",
+        "message": "A newer version of Gradle than 9.6.0 is available: 9.8.1"
+      },
+      {
+        "id": "PluralsCandidate",
+        "severity": "Warning",
+        "message": "Formatting %d followed by words (\"percent\"): This should probably be a plural rather than a string"
+      },
+      {
+        "id": "AutoboxingStateCreation",
+        "severity": "Hint",
+        "message": "Prefer `mutableIntStateOf` instead of `mutableStateOf`"
+      },
+      {
+        "id": "AutoboxingStateCreation",
+        "severity": "Hint",
+        "message": "Prefer `mutableFloatStateOf` instead of `mutableStateOf`"
+      },
+      {
+        "id": "AutoboxingStateCreation",
+        "severity": "Hint",
+        "message": "Prefer `mutableFloatStateOf` instead of `mutableStateOf`"
+      },
+      {
+        "id": "MissingApplicationIcon",
+        "severity": "Warning",
+        "message": "Should explicitly set `android:icon`, there is no default"
+      }
+    ]
+  },
+  "apk_sha256": {
+    "app": "f16beb5029b6fcc88f932d6a9e75f6de5cafec9c9a3a958b91b3173d99fc6bde",
+    "test": "0e164488a11c87d04ab9b4276148ec86dff60a9c69e7288f70fbfc21b973ce0d"
+  },
+  "source_matches_tested_build": true,
+  "fixture": {
+    "api": "37.1",
+    "window_dp": [
+      412,
+      940
+    ],
+    "memory_mb": 1536,
+    "cpu_cores": 2,
+    "physical_device_tested": false,
+    "minimum_api_tested": false
+  },
+  "video": {
+    "path": "Restaurant-Guide-UI-Prototype.mp4",
+    "sha256": "aeed5726ba4c29bab137ba4a8ea00ea01211b8e841f188a7cb5a6a50e9eea7cb",
+    "duration_seconds": 298.255521,
+    "size_bytes": 6975429,
+    "dimensions": [
+      1920,
+      1080
+    ],
+    "video_codec": "h264",
+    "frame_rate": "30/1",
+    "audio_codec": "aac",
+    "sample_rate": "48000",
+    "chapters": 12,
+    "native_playback_speed": 1.5,
+    "narration_truncated": false,
+    "full_decode_passed": true,
+    "audio_levels": {
+      "mean_volume_db": "-21.5",
+      "max_volume_db": "-3.6"
+    },
+    "synthetic_narration": true,
+    "voice": "local macOS Samantha",
+    "speaker_is_team_member": false,
+    "manual_listening_review": false,
+    "visual_review_scope": "Sampled rendered chapters and supporting native captures; exact four About names, zoom/reset, keyboard, validation, email fallback, Delete/empty and clean cut endpoints reviewed.",
+    "independent_visual_review": "passed; hash bound to final MP4"
+  },
+  "narration": {
+    "words": 328,
+    "speech_seconds": 146.574919,
+    "rate_words_per_minute": 150
+  },
+  "recording": {
+    "source": "production MainActivity, four separately recorded guest sessions",
+    "original_clips_retained_locally": true,
+    "timestamp_policy": "MP4 presentation times; host durations are not calibrated media timestamps",
+    "kept_media_intervals_for_notification_cuts": {
+      "02-list": [
+        [
+          0,
+          2.02
+        ],
+        [
+          7.8,
+          10.254422
+        ]
+      ],
+      "10-rating-tags": [
+        [
+          0,
+          56.3
+        ],
+        [
+          61.85,
+          62.751656
+        ]
+      ]
+    },
+    "other_chapters_keep_entire_media": true
+  },
+  "cleanup": {
+    "owned_emulator_stopped": true,
+    "shared_adb_preserved": true
+  },
+  "capture_limitation": "Compact/large-text test screenshots and fresh picker JSON were not exported; assertions and passing instrumentation are retained. Default production and rendered images were retained and reviewed.",
+  "functional_boundary": [
+    "session data and saved UI state",
+    "static map previews and destination-only URL",
+    "email draft and no-handler fallback",
+    "durable storage/photo access, live Maps/current location, permissions and real external handoff success remain later work"
+  ],
+  "school_submission": false
+}
