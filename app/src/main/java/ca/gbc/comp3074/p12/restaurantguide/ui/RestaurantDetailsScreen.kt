@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.ScrollState
@@ -181,7 +182,12 @@ fun RestaurantDetailsScreen(
                 Text(stringResource(R.string.details_my_photos), color = DetailsHeading,
                     fontWeight = FontWeight.Bold, fontSize = 16.sp, lineHeight = 24.sp)
                 Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    LazyRow(Modifier.weight(1f).height(84.dp), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    if (photos.isNotEmpty()) LazyRow(
+                        Modifier.weight(1f, fill = false)
+                            .widthIn(max = 84.dp * photos.size + 8.dp * (photos.size - 1))
+                            .height(84.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
                         itemsIndexed(photos) { index, photo ->
                             RestaurantPhotoImage(
                                 photo, stringResource(R.string.details_photo_number, index + 1, restaurant.name),

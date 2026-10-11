@@ -165,7 +165,12 @@ fun RestaurantFormEntry(restaurant: Restaurant? = null, onBack: () -> Unit, onSa
                     errorText = stringResource(R.string.destination_name_required))
                 FormHeading(stringResource(R.string.details_my_photos), Modifier.padding(top = 12.dp, bottom = 12.dp))
                 Row(Modifier.fillMaxWidth().testTag("$prefix-photos"), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    if (resources.isNotEmpty() || uris.isNotEmpty()) LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.weight(1f)) {
+                    val photoCount = resources.size + uris.size
+                    if (photoCount > 0) LazyRow(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        modifier = Modifier.weight(1f, fill = false)
+                            .widthIn(max = 84.dp * photoCount + 8.dp * (photoCount - 1)),
+                    ) {
                         itemsIndexed(resources, key = { index, res -> "resource-$index-$res" }) { index, res ->
                             FormPhoto(RestaurantPhoto(resourceId = res), "$prefix-resource-photo-$index", onEdit = null,
                                 onRemove = { resources = resources.filterIndexed { i, _ -> i != index } })
