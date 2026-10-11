@@ -1,6 +1,6 @@
 # Restaurant Guide — Timed presentation transcript
 
-Current video: **04:58.200**. retimed to final encode. The video remains silent, without captions or voiceover.
+Current video: **05:18.200**, including a 20-second introduction. The video remains silent, without captions or voiceover.
 
 Record one take per section. Directions and pause cues are not spoken; let each observed action finish. Times are suggested recording windows, not measured speech alignment.
 
@@ -8,182 +8,188 @@ Illustrative 130–150 words per minute, not a measurement of the presenter.
 
 **Read only the quoted paragraphs.** The italic cues are directions for pacing; do not read them aloud. Rehearse to your own speaking speed.
 
-## 00:00.000–00:15.033 | Splash Screen
+## 00:00.000–00:20.000 | Introduction
 
-*00:00.000–00:04.600 — Authentic Splash held on screen; start with the Splash sentence.*
+*00:00.500–00:19.500 — Introduce yourself, Team P12, the app’s purpose and the walkthrough while the opening title is visible.*
+
+> Hi, I’m Phillip. This is Restaurant Guide, our Team P12 mobile app prototype. It brings restaurant details, photos, ratings and visit notes together, helping you remember what you ate and whether you’d order it again. I’ll walk through the design and its main features.
+
+## 00:20.000–00:35.033 | Splash Screen
+
+*00:20.000–00:24.600 — Authentic Splash held on screen; start with the Splash sentence.*
 
 > The Splash Screen introduces Restaurant Guide.
 
-*00:04.800–00:14.700 — Allow the automatic transition, then explain the application purpose.*
+*00:24.800–00:34.700 — Allow the automatic transition, then explain the application purpose.*
 
 > Restaurant information, ratings, photos and visit notes stay together, so you remember what you ate and whether you’d order it again.
 
-## 00:15.033–00:27.500 | Restaurant List
+## 00:35.033–00:47.500 | Restaurant List
 
-*00:15.333–00:27.133 — Read while the three restaurant cards scroll into view.*
+*00:35.333–00:47.133 — Read while the three restaurant cards scroll into view.*
 
 > Restaurant List shows scrollable cards with a photo, name and rating. Rounded corners and soft borders keep the saved restaurants easy to scan.
 
-## 00:27.500–00:57.067 | Restaurant List — Search restaurants
+## 00:47.500–01:17.067 | Restaurant List — Search restaurants
 
-*00:27.700–00:32.600 — Watch the matching names change as search text is entered.*
+*00:47.700–00:52.600 — Watch the matching names change as search text is entered.*
 
 > Search restaurants updates the matching names as you type.
 
-*00:33.300–00:37.600 — Wait for Shawarma and Turkish to appear selected.*
+*00:53.300–00:57.600 — Wait for Shawarma and Turkish to appear selected.*
 
 > Selected tags match any selected category.
 
-*00:38.900–00:45.800 — Let the selected Details screen open and Back return to the filtered List.*
+*00:58.900–01:05.800 — Let the selected Details screen open and Back return to the filtered List.*
 
 > Open a card, then Back preserves the search and selected filters.
 
-*00:46.100–00:50.600 — Wait for All; this action clears tags, not the name query.*
+*01:06.100–01:10.600 — Wait for All; this action clears tags, not the name query.*
 
 > All resets tags while keeping the name query.
 
-*00:51.500–00:56.800 — Read over No restaurants found and its recovery action.*
+*01:11.500–01:16.800 — Read over No restaurants found and its recovery action.*
 
 > No restaurants found offers Clear search and filters to recover.
 
-## 00:57.067–01:11.533 | Restaurant Details
+## 01:17.067–01:31.533 | Restaurant Details
 
-*00:57.667–01:11.067 — Wait for the selected Details screen; allow its contact/map area to scroll into view.*
+*01:17.667–01:31.067 — Wait for the selected Details screen; allow its contact/map area to scroll into view.*
 
 > Restaurant Details shows the selected cover, rating, description, read-only tags, photos and contact information. The compact layout keeps the restaurant’s information together.
 
-## 01:11.533–01:37.267 | My photos
+## 01:31.533–01:57.267 | My photos
 
-*01:11.933–01:16.033 — Allow the album thumbnail to open the gallery.*
+*01:31.933–01:36.033 — Allow the album thumbnail to open the gallery.*
 
-> My photos opens a larger gallery with captions.
+> Opening a thumbnail lets me see the full photo.
 
-*01:16.833–01:21.033 — Read while the gallery is at its initial fit scale.*
+*01:36.833–01:41.033 — Read while the gallery is at its initial fit scale.*
 
-> At fit, swipe or choose arrows and thumbnails.
+> I can swipe, use the arrows, or choose a thumbnail.
 
-*01:21.933–01:25.733 — Wait for 200 percent; a finger drag pans an enlarged image.*
+*01:41.933–01:45.733 — Wait for 200 percent; a finger drag pans an enlarged image.*
 
-> Zoom allows closer inspection; dragging now pans.
+> Zooming in lets me drag around the photo.
 
-*01:27.433–01:31.333 — Wait for the percentage reset, then the next photo.*
+*01:47.433–01:51.333 — Wait for the percentage reset, then the next photo.*
 
-> Reset the zoom, then choose the next photo.
+> I’ll reset the zoom before viewing the next photo.
 
-*01:32.033–01:36.833 — Allow the next photo and Close; keep captions separate from restaurant notes.*
+*01:52.033–01:56.833 — Let the next photo appear; refer to its title above the image, then transition to visit notes.*
 
-> Captions describe one photo; visit notes describe the restaurant visit.
+> The title names the dish. Visit notes cover the overall experience.
 
-## 01:37.267–01:54.233 | Notes
+## 01:57.267–02:14.233 | Notes
 
-*01:37.667–01:42.867 — Watch Edit visit notes open the first draft.*
+*01:57.667–02:02.867 — Watch Edit visit notes open the first draft.*
 
-> Edit visit notes opens a draft for the selected restaurant.
+> Here, I can add a note about my visit.
 
-*01:45.067–01:47.767 — Wait for Cancel and the unchanged Notes panel.*
+*02:05.067–02:07.767 — Wait for Cancel and the unchanged Notes panel.*
 
-> Cancel discards the first draft.
+> Cancel leaves my original note unchanged.
 
-*01:50.767–01:53.867 — Watch the second note Save; allow the saved Notes panel to appear.*
+*02:10.767–02:13.867 — Watch the second note Save; allow the saved Notes panel to appear.*
 
-> Save applies the second visit note.
+> This time, I’ll save my changes.
 
-## 01:54.233–02:09.200 | Full-Screen Map
+## 02:14.233–02:29.200 | Full-Screen Map
 
-*01:54.433–02:02.433 — Read while the static map and saved address are visible; allow Back.*
+*02:14.433–02:22.433 — Read while the static map and saved address are visible; allow Back.*
 
-> View full map shows the selected static preview and saved address. Back returns to Details.
+> View full map opens a larger preview with the restaurant’s address. Back takes me to its details.
 
-*02:02.933–02:09.033 — Describe capability and boundary; do not claim external navigation is shown.*
+*02:22.933–02:29.033 — Describe capability and boundary; do not claim external navigation is shown.*
 
-> Get directions prepares a destination URL. Live location remains future work.
+> Get directions prepares a map link. Live maps are still future work.
 
-## 02:09.200–02:31.800 | Share by email
+## 02:29.200–02:51.800 | Share by email
 
-*02:09.600–02:17.600 — Allow Share by email to open the selected-record fallback.*
+*02:29.600–02:37.600 — Allow Share by email to open the selected-record fallback.*
 
-> Share by email prepares the restaurant name, address, phone numbers, rating, tags and description.
+> Share by email puts the restaurant’s name, address, phone numbers, rating, tags and description together in one message.
 
-*02:19.000–02:27.000 — Wait for Email app unavailable; allow its copyable details to scroll.*
+*02:39.000–02:47.000 — Wait for Email app unavailable; allow its copyable details to scroll.*
 
-> Email app unavailable provides a copyable fallback. This demo does not send an email.
+> There’s no email app set up here, so the details appear in a box that I can copy.
 
-## 02:31.800–03:06.500 | Add Restaurant
+## 02:51.800–03:26.500 | Add Restaurant
 
-*02:32.200–02:38.200 — Watch Add restaurant open; leave room for the full form.*
+*02:52.200–02:58.200 — Watch Add restaurant open; leave room for the full form.*
 
-> Add restaurant opens the full form with rounded fields and clear labels.
+> The plus button opens a form for adding a new restaurant.
 
-*02:40.000–02:45.600 — Wait for the blank-name Save and Restaurant name required.*
+*03:00.000–03:05.600 — Wait for the blank-name Save and Restaurant name required.*
 
-> Save without a name shows Restaurant name required.
+> I can’t save yet because I haven’t entered a restaurant name.
 
-*02:46.400–02:55.800 — Allow Got it, focus and complete Demo Cafe typing.*
+*03:06.400–03:15.800 — Allow Got it, focus and complete Demo Cafe typing.*
 
-> Got it returns to the form. Enter Demo Cafe in the required Restaurant name field.
+> I’ll call this one Demo Cafe. The name is required, while the other details can be added later.
 
-*02:59.100–03:05.300 — Read as the Description is entered; no address, phone or photo is added in this clip.*
+*03:19.100–03:25.300 — Read as the Description is entered; no address, phone or photo is added in this clip.*
 
-> Next, enter Coffee and sandwiches in Description.
+> For the description, I’m adding “Coffee and sandwiches” to explain what it serves.
 
-## 03:06.500–03:44.633 | Add Restaurant — Your rating
+## 03:26.500–04:04.633 | Add Restaurant — Your rating
 
-*03:06.800–03:11.200 — Watch Your rating open, then pause for the finger slide.*
+*03:26.800–03:31.200 — Watch Your rating open, then pause for the finger slide.*
 
-> Your rating opens enlarged stars for half-star selection.
+> I can slide across these larger stars to choose a rating.
 
-*03:11.300–03:17.200 — Wait for the first 4.5 selection and Cancel.*
+*03:31.300–03:37.200 — Wait for the first 4.5 selection and Cancel.*
 
-> Slide to 4.5, then Cancel discards that rating draft.
+> I’ll choose four and a half stars. Cancel leaves the rating unchanged.
 
-*03:17.900–03:28.500 — Allow reopening, the second slide and the rating dialog’s Save; pause for the applied form rating.*
+*03:37.900–03:48.500 — Allow reopening, the second slide and the rating dialog’s Save; pause for the applied form rating.*
 
-> Reopen Your rating. Save applies 4.5 to the form draft.
+> This time I’ll save the four and a half stars. The rating appears in the form, but I still need to save the restaurant.
 
-*03:28.900–03:36.700 — Watch Add tag create Cafe; pause for the Cafe chip while the restaurant is still a draft.*
+*03:48.900–03:56.700 — Watch Add tag create Cafe; pause for the Cafe chip while the restaurant is still a draft.*
 
-> Add tag adds Cafe to this draft.
+> I’ll add the Cafe tag, which I can use to filter the restaurant list.
 
-*03:37.000–03:44.100 — Allow the full form Save, then pause for the fourth saved restaurant and its Details.*
+*03:57.000–04:04.100 — Allow the full form Save, then pause for the fourth saved restaurant and its Details.*
 
-> The form’s Save creates the session record.
+> Now I’ll save the restaurant. That adds Demo Cafe with the details I’ve entered.
 
-## 03:44.633–04:40.433 | Edit Restaurant
+## 04:04.633–05:00.433 | Edit Restaurant
 
-*03:45.033–03:52.233 — Watch Edit pre-fill the saved record, then change its name.*
+*04:05.033–04:12.233 — Watch Edit pre-fill the saved record, then change its name.*
 
-> Edit restaurant pre-fills the saved record. Change its name in the draft.
+> Edit opens the same form with the existing details filled in. I’ll change the restaurant’s name.
 
-*03:54.633–03:58.533 — Allow Back, then observe unchanged Demo Cafe.*
+*04:14.633–04:18.533 — Allow Back, then observe unchanged Demo Cafe.*
 
-> Back discards that draft; Demo Cafe is unchanged.
+> Back cancels my changes and keeps the original name.
 
-*03:58.833–04:09.833 — Allow a second edit and the form Save; pause for Demo Cafe Updated in Details.*
+*04:18.833–04:29.833 — Allow a second edit and the form Save; pause for Demo Cafe Updated in Details.*
 
-> Reopen Edit, change the name to Demo Cafe Updated, and Save the record.
+> I’ll make the change again, this time saving it as Demo Cafe Updated. The new name now appears on the details screen.
 
-*04:11.133–04:17.933 — Allow Delete restaurant and Cancel; pause for the selected record remaining in Details.*
+*04:31.133–04:37.933 — Allow Delete restaurant and Cancel; pause for the selected record remaining in Details.*
 
-> Delete restaurant asks for confirmation. Cancel keeps the selected record.
+> Before deleting, the app asks me to confirm. Choosing Cancel keeps the restaurant.
 
-*04:18.133–04:23.133 — Allow the second Delete confirmation, then pause for the updated saved count.*
+*04:38.133–04:43.133 — Allow the second Delete confirmation, then pause for the updated saved count.*
 
-> Confirm Delete removes Demo Cafe Updated from the current session.
+> Confirming Delete removes Demo Cafe Updated from the list.
 
-*04:23.633–04:36.333 — Pause for three separate confirmed deletions, each selecting its own record.*
+*04:43.633–04:56.333 — Pause for three separate confirmed deletions, each selecting its own record.*
 
-> Then delete Two Brothers Shawarma, Midyeci Riza and La Unica separately.
+> To show the empty list, I’m removing the three original restaurants one at a time: Two Brothers Shawarma, Midyeci Riza and La Unica.
 
-*04:36.633–04:40.333 — Read over the actual empty state; one Delete did not clear the whole list.*
+*04:56.633–05:00.333 — Read over the actual empty state; one Delete did not clear the whole list.*
 
-> No restaurants saved yet offers Add restaurant.
+> With none left, I can add a restaurant here.
 
-## 04:40.433–04:58.200 | About
+## 05:00.433–05:18.200 | About
 
-*04:40.833–04:50.833 — Wait for About and keep all four approved names readable.*
+*05:00.833–05:10.833 — Wait for About and keep all four approved names readable.*
 
-> About shows Restaurant Guide and Team P12: Kalid Ali, Phillip Onofua, Mohamed Amine OUATAR and Joshua Zaakir.
+> The About page introduces our team: Kalid Ali, Phillip Onofua, Mohamed Amine OUATAR and Joshua Zaakir.
 
-*04:51.133–04:57.933 — Close with the UI prototype’s functional boundary.*
+*05:11.133–05:17.933 — Close with the UI prototype’s functional boundary.*
 
-> Records use session data; permanent storage, live maps and location permissions remain future work.
+> That’s our UI prototype. Permanent storage and live maps come next. Thanks for watching.
