@@ -7,6 +7,11 @@ local.properties
 *.iml
 .DS_Store
 captures/
+# Presentation videos are shared through Drive, not stored in the repository.
+*.[mM][pP]4
+*.[mM][oO][vV]
+*.[mM]4[vV]
+*.[wW][eE][bB][mM]
 # Credentials and signing material
 .env
 .env.*

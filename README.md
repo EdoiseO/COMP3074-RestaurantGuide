@@ -36,6 +36,6 @@ Run unit tests with `./gradlew :app:testDebugUnitTest` and device tests with `./
 - [Team development plan](docs/development-plan.md) and [contribution guide](CONTRIBUTING.md)
 - [Figma design](https://www.figma.com/design/8Z8T16iL2SBTzZm6pUShAA) and [wireframe exports](docs/wireframes/)
 - [Demo restaurant sources](docs/demo-restaurant-research.md) and [photo/map sources](docs/restaurant-list-photo-sources.md)
-- [Silent demo video and timed recording script](docs/demo/README.md)
+- [Final presentation and recording script](docs/demo/README.md)
 
 Phillip Onofua is building the UI prototype alone; the approved project team and broader responsibilities remain in the development plan. The UI prototype brief requires the GitHub repository link and a video explaining the design and application purpose.

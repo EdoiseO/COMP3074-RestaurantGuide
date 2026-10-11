@@ -1,15 +1,15 @@
 # Restaurant Guide UI prototype demonstration
 
-[Silent demo video — 5:18](Restaurant-Guide-UI-Prototype.mp4) · [Public repository](https://github.com/EdoiseO/COMP3074-RestaurantGuide)
+[Final narrated presentation — 5:18](https://drive.google.com/file/d/1W0jKW0yuCQhGVjLw8sTrYKg9-VvY8BYh/view) · [Public repository](https://github.com/EdoiseO/COMP3074-RestaurantGuide) · [Figma design](https://www.figma.com/design/8Z8T16iL2SBTzZm6pUShAA)
 
-A 20-second introduction presents Restaurant Guide, Team P12, presenter Phillip Onofua and the app’s purpose before the walkthrough. The video demonstrates Splash, List/search/tags, Details, photos/zoom, Notes, the static map, email fallback, Add validation, half-star ratings, Edit, Delete and About. It uses cream/charcoal layouts with muted olive accents; native app footage retains its purple styling. There is no voiceover or on-screen transcript.
+The presentation introduces Restaurant Guide, Team P12, presenter Phillip Onofua and the app’s purpose, then demonstrates Splash, List/search/tags, Details, photos/zoom, Notes, the static map, email fallback, Add validation, half-star ratings, Edit, Delete and About. It uses cream/charcoal layouts with muted olive accents; native app footage retains its purple styling.
 
-Use the [timed recording script](transcript-timed.md) ([plain text](transcript-timed.txt)) to record audio separately. Read the quoted text; pause/action instructions are not spoken. Suggested speaking windows follow the video timer and need rehearsal at your own pace.
+The finished recording includes the presenter’s audio and runs 5:18.205 at 1280×720 and 30fps. The Drive link is set to **Anyone with the link — Viewer**. Video files are kept outside the repository.
 
-The 1920×1080 H.264 video runs 5:18.200 at 30fps with thirteen chapters: Introduction followed by the twelve walkthrough sections. The on-screen 01/12–12/12 numbering identifies those walkthrough sections. All transcript cues after the introduction are shifted forward by exactly 20 seconds. Native motion plays at 1.5×; the four-second authentic Splash hold and final-frame holds are presentation edits. Refreshed footage shows the compact My photos layout and distinguishes rating Save from form Save and separate deletions before the empty list.
+The [timed recording guide](transcript-timed.md) ([plain text](transcript-timed.txt)) follows the 5:18.200 silent source video used before narration was recorded. Quoted text is spoken; action and pause cues are not. The guide is not a verbatim transcript of the final recording. Its introduction lasts 20 seconds, followed by twelve walkthrough sections labelled 01/12–12/12. Native footage plays at 1.5× with selected holds for the presentation.
 
 - [Presentation preview](presentation-preview.png)
 - [About preview](about.png) and [gallery preview](gallery-200.png)
-- [Original narration](narration.txt) and [historical SRT](narration.srt) — retained references; use the current timed script for this video.
+- [Original narration](narration.txt) and [historical SRT](narration.srt) — retained source references, not the final recorded transcript.
 
 Records use session data. Maps are static previews and the email chapter shows the no-handler fallback. Durable storage, live location and successful external handoffs remain future work. The official team is Kalid Ali, Phillip Onofua, Mohamed Amine OUATAR and Joshua Zaakir; Phillip is building the UI prototype alone.
