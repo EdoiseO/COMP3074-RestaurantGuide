@@ -3,7 +3,7 @@ package ca.gbc.comp3074.p12.restaurantguide.data
 import ca.gbc.comp3074.p12.restaurantguide.R
 
 /** In-memory wireframe records, enriched from official menus/contact pages on October 10, 2026.
- * Ratings are sample personal ratings, not public review scores. See docs/demo-restaurant-research.md.
+ * Ratings are sample personal ratings, not public review scores. See README.md for sources.
  */
 object DemoRestaurants {
     val restaurants = listOf(
