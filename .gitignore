@@ -13,3 +13,25 @@ captures/
 secrets.properties
 *.jks
 *.keystore
+
+# Local course/agent notes and generated audit evidence
+/outputs/
+/audits/
+/scratch/
+/notes/
+/docs/demo/verification.json
+
+# Keep Markdown limited to reviewed application/team/deliverable documents.
+# Add an explicit exception when a new document is needed for the project.
+*.[mM][dD]
+!/README.md
+!/CONTRIBUTING.md
+!/docs/README.md
+!/docs/requirements.md
+!/docs/development-plan.md
+!/docs/design-decisions.md
+!/docs/prototype-build-breakdown.md
+!/docs/demo-restaurant-research.md
+!/docs/restaurant-list-photo-sources.md
+!/docs/demo/README.md
+!/docs/demo/transcript-timed.md

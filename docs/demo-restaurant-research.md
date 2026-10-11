@@ -39,4 +39,4 @@ Actual images hosted by La Unica are recorded in its [public media metadata](htt
 
 These restaurant-hosted images have generic filenames and blank captions/alt text. The website footer reserves copyright; no open reuse licence was observed. Reference copies are kept outside the app/repository, with direct source URLs and hashes. They are not personal visit memories or new bundled app assets.
 
-No dietary certifications, review scores, prices, opening hours or branch-specific photo claims were invented. The research updates descriptions, contacts, tags and compact list summaries; the full Details/gallery workflow remains a later prototype section.
+No dietary certifications, review scores, prices, opening hours or branch-specific photo claims were invented. The research updates descriptions, contacts, tags and compact list summaries.
