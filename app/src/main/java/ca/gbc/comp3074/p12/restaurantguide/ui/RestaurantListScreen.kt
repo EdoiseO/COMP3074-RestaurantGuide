@@ -150,7 +150,11 @@ fun RestaurantListScreen(
                         color = MaterialTheme.colorScheme.primary,
                     )
                     Text(stringResource(if (restaurants.isEmpty()) R.string.list_empty_hint else R.string.list_no_results_hint))
-                    TextButton(onClick = if (restaurants.isEmpty()) onAddClick else onClearSearchAndFilters) {
+                    TextButton(
+                        onClick = if (restaurants.isEmpty()) onAddClick else onClearSearchAndFilters,
+                        modifier = Modifier.align(Alignment.End),
+                        contentPadding = PaddingValues(horizontal = 0.dp, vertical = 8.dp),
+                    ) {
                         Text(stringResource(if (restaurants.isEmpty()) R.string.list_add else R.string.list_clear_filters))
                     }
                 }
@@ -301,3 +305,11 @@ private fun RestaurantListPreview() {
 @Preview(showBackground = true)
 @Composable
 private fun EmptyRestaurantListPreview() { RestaurantGuideTheme { RestaurantListFlow(emptyList()) } }
+
+@Preview(name = "No search results", showBackground = true, widthDp = 412, heightDp = 940)
+@Composable
+private fun NoResultsRestaurantListPreview() {
+    RestaurantGuideTheme {
+        RestaurantListScreen(DemoRestaurants.restaurants, "zzzz", emptySet(), {}, {}, {}, {}, {}, {}, {}, rememberLazyListState(), rememberLazyListState())
+    }
+}
