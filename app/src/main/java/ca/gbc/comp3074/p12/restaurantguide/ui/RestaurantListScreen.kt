@@ -66,6 +66,7 @@ import ca.gbc.comp3074.p12.restaurantguide.data.Restaurant
 import ca.gbc.comp3074.p12.restaurantguide.data.filterRestaurants
 import ca.gbc.comp3074.p12.restaurantguide.data.formatRating
 import ca.gbc.comp3074.p12.restaurantguide.ui.theme.RestaurantGuideTheme
+import ca.gbc.comp3074.p12.restaurantguide.ui.theme.RestaurantGuideTokens
 
 private val ListHeadingColor = Color(0xFF4F378A)
 private val ListTextColor = Color(0xFF49454F)
@@ -282,7 +283,7 @@ private fun RestaurantCard(restaurant: Restaurant, onClick: () -> Unit) {
                 )
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                     Text(formatRating(restaurant.rating), style = MaterialTheme.typography.titleMedium, color = ListTextColor)
-                    Text("★", color = Color(0xFFFFB300), fontSize = 18.sp)
+                    Text("★", color = RestaurantGuideTokens.star, fontSize = 18.sp)
                 }
             }
             Text(

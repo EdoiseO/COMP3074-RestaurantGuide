@@ -11,7 +11,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeJoin
 import androidx.compose.ui.graphics.drawscope.Stroke
@@ -34,6 +33,7 @@ import androidx.compose.ui.unit.dp
 import ca.gbc.comp3074.p12.restaurantguide.R
 import ca.gbc.comp3074.p12.restaurantguide.data.formatRating
 import ca.gbc.comp3074.p12.restaurantguide.data.snapRatingFromPosition
+import ca.gbc.comp3074.p12.restaurantguide.ui.theme.RestaurantGuideTokens
 import kotlin.math.cos
 import kotlin.math.min
 import kotlin.math.roundToInt
@@ -123,7 +123,7 @@ fun StarRating(
         val starDiameter = min(cellWidth, starSize.toPx())
         val outerRadius = (starDiameter / 2f - 2.dp.toPx()).coerceAtLeast(1f)
         val innerRadius = outerRadius * 0.45f
-        val starColor = Color(0xFFF4B400)
+        val starColor = RestaurantGuideTokens.star
         repeat(5) { index ->
             val center = Offset(cellWidth * (index + 0.5f), size.height / 2f)
             val path = Path().apply {
