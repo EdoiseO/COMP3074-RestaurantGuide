@@ -10,11 +10,11 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
-import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
@@ -184,7 +184,7 @@ fun RestaurantFormEntry(restaurant: Restaurant? = null, onBack: () -> Unit, onSa
                 cancelModifier = Modifier.testTag("$prefix-cancel"), saveModifier = Modifier.testTag("$prefix-save"))
         },
     ) { insets ->
-        Column(Modifier.fillMaxSize().padding(insets).testTag("restaurant-form")) {
+        Column(Modifier.fillMaxSize().padding(insets).consumeWindowInsets(insets).testTag("restaurant-form")) {
             FormHeader(isEdit = restaurant != null, onBack = onBack, backTag = "$prefix-back")
             Column(Modifier.fillMaxWidth().weight(1f).verticalScroll(scroll).padding(horizontal = 20.dp).padding(top = 8.dp, bottom = 24.dp)) {
                 Box(Modifier.fillMaxWidth().height(180.dp).clip(CoverShape)
