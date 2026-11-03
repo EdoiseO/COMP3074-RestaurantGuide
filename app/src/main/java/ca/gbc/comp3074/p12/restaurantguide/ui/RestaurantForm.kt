@@ -85,11 +85,29 @@ private val FormPurple = Color(0xFF4F378A)
 private val FormBorder = Color(0xFFCAC4D0)
 private val FormMuted = Color(0xFF49454F)
 private val FormInk = Color(0xFF1C1A21)
+private val FormTitle = Color(0xFF25212B)
 private val CoverFill = Color(0xFFF2EDF7)
 private val TagFill = Color(0xFFE8DEF8)
 private val TagText = Color(0xFF4A4459)
 // Figma reports mixed 16/8 corners on the cover; the exact corner mapping is an estimate.
 private val CoverShape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp, bottomStart = 8.dp, bottomEnd = 8.dp)
+
+/** Add: "New restaurant" title (Figma Bold 22/24). Edit: "← Edit restaurant" title that also goes back. */
+@Composable
+private fun FormHeader(isEdit: Boolean, onBack: () -> Unit, backTag: String) {
+    if (isEdit) {
+        Row(Modifier.padding(start = 8.dp, top = 8.dp).heightIn(min = 48.dp).clip(RoundedCornerShape(12.dp))
+            .clickable(role = Role.Button, onClick = onBack).padding(horizontal = 12.dp).testTag(backTag)
+            .semantics { heading() },
+            verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text("←", color = FormPurple, fontSize = 22.sp, lineHeight = 28.sp)
+            Text(stringResource(R.string.details_edit_title), color = FormPurple, fontSize = 22.sp, lineHeight = 28.sp)
+        }
+    } else {
+        Text(stringResource(R.string.form_new_title), Modifier.padding(start = 20.dp, top = 24.dp, end = 20.dp, bottom = 8.dp)
+            .semantics { heading() }, color = FormTitle, fontSize = 22.sp, lineHeight = 24.sp, fontWeight = FontWeight.Bold)
+    }
+}
 
 /** Always visible, including 0.0 / 5, so an unrated draft still reads as a value. */
 @Composable
@@ -158,15 +176,16 @@ fun RestaurantFormEntry(restaurant: Restaurant? = null, onBack: () -> Unit, onSa
         }
     }
 
-    Scaffold(containerColor = Color.White) { insets ->
-        Column(Modifier.fillMaxSize().padding(insets).imePadding().testTag("restaurant-form")) {
-            Row(Modifier.fillMaxWidth().heightIn(min = 48.dp).padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                TextButton(onClick = onBack, modifier = Modifier.testTag("$prefix-back")) {
-                    Text("←  " + stringResource(if (restaurant == null) R.string.destination_add_title else R.string.details_edit_title), fontSize = 16.sp)
-                }
-                Box(Modifier.weight(1f))
-                TextButton(onClick = save, modifier = Modifier.testTag("$prefix-save")) { Text(stringResource(R.string.destination_save), fontSize = 16.sp) }
-            }
+    Scaffold(
+        containerColor = Color.White,
+        // Figma 52:213 / 50:166: fixed Cancel/Save dock; it owns the keyboard and navigation insets.
+        bottomBar = {
+            ActionDock(cancel = onBack, save = save,
+                cancelModifier = Modifier.testTag("$prefix-cancel"), saveModifier = Modifier.testTag("$prefix-save"))
+        },
+    ) { insets ->
+        Column(Modifier.fillMaxSize().padding(insets).testTag("restaurant-form")) {
+            FormHeader(isEdit = restaurant != null, onBack = onBack, backTag = "$prefix-back")
             Column(Modifier.fillMaxWidth().weight(1f).verticalScroll(scroll).padding(horizontal = 20.dp).padding(top = 8.dp, bottom = 24.dp)) {
                 Box(Modifier.fillMaxWidth().height(180.dp).clip(CoverShape)
                     .background(CoverFill).clickable { showCoverPicker = true }.testTag("$prefix-cover")) {
@@ -266,17 +285,15 @@ fun RestaurantFormEntry(restaurant: Restaurant? = null, onBack: () -> Unit, onSa
             }
         }
     }
-    if (showNameRequired) AlertDialog(onDismissRequest = { showNameRequired = false }, shape = RoundedCornerShape(24.dp), containerColor = Color.White,
-        title = { Text(stringResource(R.string.form_name_required_title), fontSize = 18.sp, lineHeight = 24.sp, fontWeight = FontWeight.Bold) },
-        text = { Text(stringResource(R.string.form_name_required_body)) },
-        confirmButton = {
-            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.Center) {
-                TextButton(onClick = { showNameRequired = false }) { Text(stringResource(R.string.details_got_it)) }
-            }
-        })
-    if (showPhoneError) AlertDialog(onDismissRequest = { showPhoneError = false }, shape = RoundedCornerShape(24.dp), containerColor = Color.White,
-        title = { Text(stringResource(R.string.form_phone_error_title)) }, text = { Text(stringResource(R.string.form_phone_error)) },
-        confirmButton = { TextButton(onClick = { showPhoneError = false; phoneFocus.requestFocus() }) { Text(stringResource(R.string.details_got_it)) } })
+    // Figma 52:325: left-aligned text, "Got it" on the right.
+    if (showNameRequired) AppDialog(stringResource(R.string.form_name_required_title), { showNameRequired = false },
+        Modifier.testTag("name-required-dialog"), body = stringResource(R.string.form_name_required_body)) {
+        AppDialogButton(stringResource(R.string.details_got_it), { showNameRequired = false }, Modifier.testTag("name-required-ok"))
+    }
+    if (showPhoneError) AppDialog(stringResource(R.string.form_phone_error_title), { showPhoneError = false },
+        Modifier.testTag("phone-error-dialog"), body = stringResource(R.string.form_phone_error)) {
+        AppDialogButton(stringResource(R.string.details_got_it), { showPhoneError = false; phoneFocus.requestFocus() }, Modifier.testTag("phone-error-ok"))
+    }
     if (showCoverPicker) VisitPhotoPicker(onDismiss = { showCoverPicker = false }, onSave = { uri, _ -> coverUri = uri; coverResource = 0; showCoverPicker = false },
         initialUri = coverUri.takeIf(String::isNotBlank), includeCaption = false, title = stringResource(R.string.form_restaurant_photo))
     if (showVisitPicker) VisitPhotoPicker(onDismiss = { showVisitPicker = false }, onSave = { uri, caption ->
@@ -291,24 +308,20 @@ fun RestaurantFormEntry(restaurant: Restaurant? = null, onBack: () -> Unit, onSa
         showTags = false
     })
     if (showAddress) AddressEntryDialog(address, onDismiss = { showAddress = false }, onSave = { address = it; showAddress = false })
-    if (showRating) Dialog(onDismissRequest = { showRating = false }) {
-        Surface(Modifier.fillMaxWidth().testTag("rating-dialog"), shape = RoundedCornerShape(24.dp), color = Color.White) {
-            Column(Modifier.verticalScroll(rememberScrollState()).padding(horizontal = 24.dp, vertical = 16.dp)) {
-                Text(stringResource(R.string.destination_your_rating), fontSize = 18.sp, lineHeight = 24.sp, fontWeight = FontWeight.Bold)
-                Spacer(Modifier.height(12.dp))
-                Text(stringResource(R.string.form_rating_guidance), Modifier.fillMaxWidth(), color = Color.Black,
-                    style = MaterialTheme.typography.bodyMedium, textAlign = TextAlign.Center)
-                Spacer(Modifier.height(12.dp))
-                StarRating(ratingDraft, { ratingDraft = it }, Modifier.align(Alignment.CenterHorizontally).testTag("rating-swipe-stars"), starSize = 44.dp)
-                Spacer(Modifier.height(8.dp))
-                Text("${formatRating(ratingDraft)} / 5", Modifier.align(Alignment.CenterHorizontally).testTag("rating-draft-value"),
-                    fontSize = 28.sp, lineHeight = 36.sp, fontWeight = FontWeight.Bold, color = Color.Black)
-                Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)) {
-                    TextButton(onClick = { showRating = false }, modifier = Modifier.heightIn(min = 48.dp)) { Text(stringResource(R.string.details_cancel)) }
-                    TextButton(onClick = { rating = ratingDraft; showRating = false }, modifier = Modifier.heightIn(min = 48.dp).testTag("rating-save")) { Text(stringResource(R.string.destination_save)) }
-                }
+    // Figma 76:271: 352 wide; guidance on the left; stars (232×48 drag row) and "4.5 / 5" share one row.
+    // Save changes only the form's draft rating; the form's own Save commits it.
+    if (showRating) AppDialog(stringResource(R.string.destination_your_rating), { showRating = false },
+        Modifier.testTag("rating-dialog"), body = stringResource(R.string.form_rating_guidance), maxWidth = 352.dp,
+        content = {
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                StarRating(ratingDraft, { ratingDraft = it }, Modifier.testTag("rating-swipe-stars"), starSize = 46.4.dp)
+                Spacer(Modifier.weight(1f).widthIn(min = 8.dp))
+                Text("${formatRating(ratingDraft)} / 5", Modifier.testTag("rating-draft-value"),
+                    color = FormInk, fontSize = 20.sp, lineHeight = 28.sp, fontWeight = FontWeight.Bold, maxLines = 1)
             }
-        }
+        }) {
+        AppDialogButton(stringResource(R.string.details_cancel), { showRating = false }, Modifier.testTag("rating-cancel"))
+        AppDialogButton(stringResource(R.string.destination_save), { rating = ratingDraft; showRating = false }, Modifier.testTag("rating-save"))
     }
 }
 
@@ -353,11 +366,13 @@ private fun FormPhoto(photo: RestaurantPhoto, tag: String, onEdit: (() -> Unit)?
 @Composable
 private fun TagEntryDialog(onDismiss: () -> Unit, onAdd: (String) -> Unit) {
     var draft by rememberSaveable { mutableStateOf("") }
-    AlertDialog(onDismissRequest = onDismiss, shape = RoundedCornerShape(24.dp), containerColor = Color.White,
-        title = { Text(stringResource(R.string.form_tag_title)) }, text = {
-            OutlinedTextField(draft, { draft = it }, Modifier.fillMaxWidth().testTag("tag-input"), label = { Text(stringResource(R.string.form_tag_label)) }, singleLine = true, shape = RoundedCornerShape(12.dp))
-        }, dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.details_cancel)) } },
-        confirmButton = { TextButton(onClick = { onAdd(draft.trim()) }, enabled = draft.isNotBlank(), modifier = Modifier.testTag("tag-save")) { Text(stringResource(R.string.form_tag_add)) } })
+    AppDialog(stringResource(R.string.form_tag_title), onDismiss, Modifier.testTag("tag-dialog"), content = {
+        DialogTextField(draft, { draft = it }, stringResource(R.string.form_tag_label), "", Modifier.testTag("tag-input"),
+            capitalization = KeyboardCapitalization.Words)
+    }) {
+        AppDialogButton(stringResource(R.string.details_cancel), onDismiss, Modifier.testTag("tag-cancel"))
+        AppDialogButton(stringResource(R.string.form_tag_add), { onAdd(draft.trim()) }, Modifier.testTag("tag-save"), enabled = draft.isNotBlank())
+    }
 }
 
 @Composable
@@ -368,15 +383,20 @@ private fun AddressEntryDialog(initial: String, onDismiss: () -> Unit, onSave: (
     var city by rememberSaveable { mutableStateOf(if (pieces.size >= 3) pieces[pieces.lastIndex - 1] else pieces.getOrNull(1).orEmpty()) }
     var province by rememberSaveable { mutableStateOf(region.substringBefore(' ')) }
     var postal by rememberSaveable { mutableStateOf(region.substringAfter(' ', "")) }
-    AlertDialog(onDismissRequest = onDismiss, shape = RoundedCornerShape(24.dp), containerColor = Color.White,
-        title = { Text(stringResource(R.string.form_address_details)) }, text = {
-            Column(Modifier.fillMaxWidth().heightIn(max = 420.dp).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                FormField(street, { street = it }, stringResource(R.string.form_street), "", "address-street", singleLine = true)
-                FormField(city, { city = it }, stringResource(R.string.form_city), "", "address-city", singleLine = true)
-                FormField(province, { province = it }, stringResource(R.string.form_province), "", "address-province", singleLine = true)
-                FormField(postal, { postal = it.uppercase(Locale.ROOT) }, stringResource(R.string.form_postal), "", "address-postal", singleLine = true)
-            }
-        }, dismissButton = { TextButton(onClick = onDismiss) { Text(stringResource(R.string.details_cancel)) } },
-        confirmButton = { TextButton(onClick = { onSave(normalizeAddress(listOf(street.trim(), city.trim(), listOf(province.trim(), postal.trim()).filter(String::isNotEmpty).joinToString(" ")).filter(String::isNotEmpty).joinToString(", "))) },
-            enabled = street.isNotBlank(), modifier = Modifier.testTag("address-save")) { Text(stringResource(R.string.destination_save)) } })
+    AppDialog(stringResource(R.string.form_address_details), onDismiss, Modifier.testTag("address-dialog"), content = {
+        DialogTextField(street, { street = it }, stringResource(R.string.form_street), "", Modifier.testTag("address-street"),
+            capitalization = KeyboardCapitalization.Words)
+        DialogTextField(city, { city = it }, stringResource(R.string.form_city), "", Modifier.testTag("address-city"),
+            capitalization = KeyboardCapitalization.Words)
+        DialogTextField(province, { province = it }, stringResource(R.string.form_province), "", Modifier.testTag("address-province"),
+            capitalization = KeyboardCapitalization.Characters)
+        DialogTextField(postal, { postal = it.uppercase(Locale.ROOT) }, stringResource(R.string.form_postal), "", Modifier.testTag("address-postal"),
+            capitalization = KeyboardCapitalization.Characters)
+    }) {
+        AppDialogButton(stringResource(R.string.details_cancel), onDismiss, Modifier.testTag("address-cancel"))
+        AppDialogButton(stringResource(R.string.destination_save), {
+            onSave(normalizeAddress(listOf(street.trim(), city.trim(), listOf(province.trim(), postal.trim())
+                .filter(String::isNotEmpty).joinToString(" ")).filter(String::isNotEmpty).joinToString(", ")))
+        }, Modifier.testTag("address-save"), enabled = street.isNotBlank())
+    }
 }

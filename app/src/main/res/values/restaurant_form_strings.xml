@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="form_new_title">New restaurant</string>
     <string name="form_restaurant_photo">Restaurant photo</string>
     <string name="form_add_cover">+ Add restaurant photo</string>
     <string name="form_change_photo">Change photo</string>
