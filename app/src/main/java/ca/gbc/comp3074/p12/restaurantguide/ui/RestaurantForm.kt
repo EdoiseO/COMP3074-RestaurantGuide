@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
@@ -33,6 +34,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.minimumInteractiveComponentSize
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
@@ -58,7 +60,10 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.TextRange
 import androidx.compose.ui.text.input.TextFieldValue
@@ -78,6 +83,25 @@ private val FormStringsSaver = listSaver<List<String>, String>(save = { it }, re
 private val FormResourcesSaver = listSaver<List<Int>, Int>(save = { it }, restore = { it })
 private val FormPurple = Color(0xFF4F378A)
 private val FormBorder = Color(0xFFCAC4D0)
+private val FormMuted = Color(0xFF49454F)
+private val FormInk = Color(0xFF1C1A21)
+private val CoverFill = Color(0xFFF2EDF7)
+private val TagFill = Color(0xFFE8DEF8)
+private val TagText = Color(0xFF4A4459)
+// Figma reports mixed 16/8 corners on the cover; the exact corner mapping is an estimate.
+private val CoverShape = RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp, bottomStart = 8.dp, bottomEnd = 8.dp)
+
+/** Always visible, including 0.0 / 5, so an unrated draft still reads as a value. */
+@Composable
+private fun RatingReadout(rating: Float) {
+    Text(
+        buildAnnotatedString {
+            withStyle(SpanStyle(fontSize = 20.sp, fontWeight = FontWeight.Bold, color = FormInk)) { append(formatRating(rating)) }
+            withStyle(SpanStyle(fontSize = 14.sp, color = FormMuted)) { append(" / 5") }
+        },
+        Modifier.padding(start = 12.dp),
+    )
+}
 
 /** Add and Edit share the same draft. Leaving without Save never changes a saved record. */
 @Composable
@@ -144,8 +168,8 @@ fun RestaurantFormEntry(restaurant: Restaurant? = null, onBack: () -> Unit, onSa
                 TextButton(onClick = save, modifier = Modifier.testTag("$prefix-save")) { Text(stringResource(R.string.destination_save), fontSize = 16.sp) }
             }
             Column(Modifier.fillMaxWidth().weight(1f).verticalScroll(scroll).padding(horizontal = 20.dp).padding(top = 8.dp, bottom = 24.dp)) {
-                Box(Modifier.fillMaxWidth().height(180.dp).clip(RoundedCornerShape(topStart = 24.dp, topEnd = 24.dp))
-                    .background(Color(0xFFF1ECF7)).clickable { showCoverPicker = true }.testTag("$prefix-cover")) {
+                Box(Modifier.fillMaxWidth().height(180.dp).clip(CoverShape)
+                    .background(CoverFill).clickable { showCoverPicker = true }.testTag("$prefix-cover")) {
                     if (coverUri.isNotBlank() || coverResource != 0) {
                         RestaurantPhotoImage(RestaurantPhoto(resourceId = coverResource.takeIf { it != 0 && coverUri.isBlank() }, uri = coverUri.takeIf(String::isNotBlank)),
                             stringResource(R.string.form_restaurant_photo), Modifier.fillMaxSize(), ContentScale.Crop)
@@ -156,8 +180,11 @@ fun RestaurantFormEntry(restaurant: Restaurant? = null, onBack: () -> Unit, onSa
                             Surface(shape = RoundedCornerShape(50), color = Color.White) { Icon(painterResource(R.drawable.ic_close), stringResource(R.string.form_remove_cover), Modifier.size(24.dp), tint = FormPurple) }
                         }
                     } else {
-                        Icon(painterResource(R.drawable.ic_photo), null, Modifier.align(Alignment.TopEnd).padding(20.dp).size(24.dp), tint = Color(0xFF49454F))
-                        Text(stringResource(R.string.form_add_cover), Modifier.align(Alignment.Center), color = Color(0xFF49454F), fontSize = 14.sp)
+                        Column(Modifier.align(Alignment.Center), horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            Icon(painterResource(R.drawable.ic_photo), null, Modifier.size(24.dp), tint = FormMuted)
+                            Text(stringResource(R.string.form_add_cover), color = FormMuted, fontSize = 14.sp, lineHeight = 20.sp)
+                        }
                     }
                 }
                 FormField(name, { name = it; if (it.isNotBlank()) nameError = false }, stringResource(R.string.destination_restaurant_name),
@@ -190,24 +217,37 @@ fun RestaurantFormEntry(restaurant: Restaurant? = null, onBack: () -> Unit, onSa
                 FormField(description, { description = it }, stringResource(R.string.destination_description), stringResource(R.string.form_description_hint),
                     "$prefix-description", Modifier.padding(top = 16.dp), minLines = 4, compact = restaurant != null)
                 FormHeading(stringResource(R.string.destination_your_rating), Modifier.padding(top = 12.dp, bottom = 8.dp))
-                Row(Modifier.fillMaxWidth().heightIn(min = 48.dp).clickable(role = Role.Button) { ratingDraft = rating; showRating = true }
-                    .testTag("$prefix-rating"), verticalAlignment = Alignment.CenterVertically) {
-                    StarRating(rating, {}, interactive = false, starSize = 28.dp)
-                    if (rating > 0f) Text("${formatRating(rating)} / 5", Modifier.padding(start = 12.dp), color = Color(0xFF49454F), fontSize = 14.sp)
+                BoxWithConstraints(Modifier.fillMaxWidth()) {
+                    // Figma 52:213 / 50:166: five 48px star glyphs across a 249×56 row. Narrow screens
+                    // shrink the stars so the readout always keeps its room on the right.
+                    val starSize = minOf(50.dp, (maxWidth - 96.dp) / 5)
+                    Row(Modifier.fillMaxWidth().heightIn(min = 56.dp).clickable(role = Role.Button) { ratingDraft = rating; showRating = true }
+                        .testTag("$prefix-rating"), verticalAlignment = Alignment.CenterVertically) {
+                        StarRating(rating, {}, interactive = false, starSize = starSize)
+                        Spacer(Modifier.weight(1f))
+                        RatingReadout(rating)
+                    }
                 }
                 FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp), verticalArrangement = Arrangement.spacedBy(8.dp), modifier = Modifier.padding(top = 4.dp, bottom = 4.dp)) {
                     tags.forEach { tag ->
-                        Surface(shape = RoundedCornerShape(8.dp), color = Color.White, border = androidx.compose.foundation.BorderStroke(1.dp, FormBorder)) {
-                            Row(Modifier.widthIn(max = 320.dp).clickable { tags = tags - tag }
-                                .semantics { contentDescription = "Remove tag $tag" }.padding(horizontal = 12.dp, vertical = 8.dp), verticalAlignment = Alignment.CenterVertically) {
-                                Text(tag, color = Color(0xFF49454F), fontSize = 14.sp, modifier = Modifier.weight(1f, fill = false))
-                                Icon(painterResource(R.drawable.ic_close), null, Modifier.padding(start = 6.dp).size(16.dp), tint = FormPurple)
+                        // Figma 50:166: lavender M3 filter chip, 32 high, 16/6 padding. The ✕ keeps removal
+                        // visible (Figma omits it); the touch area is expanded to 48dp.
+                        Surface(shape = RoundedCornerShape(8.dp), color = TagFill,
+                            modifier = Modifier.minimumInteractiveComponentSize()) {
+                            Row(Modifier.widthIn(max = 320.dp).heightIn(min = 32.dp).clickable { tags = tags - tag }
+                                .semantics { contentDescription = "Remove tag $tag" }.padding(horizontal = 16.dp, vertical = 6.dp),
+                                verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                Text(tag, color = TagText, fontSize = 14.sp, lineHeight = 20.sp, fontWeight = FontWeight.Medium,
+                                    modifier = Modifier.weight(1f, fill = false))
+                                Icon(painterResource(R.drawable.ic_close), null, Modifier.size(16.dp), tint = TagText)
                             }
                         }
                     }
-                    Surface(Modifier.clickable { showTags = true }.testTag("$prefix-add-tag"), shape = RoundedCornerShape(8.dp), color = Color.White,
+                    Surface(Modifier.minimumInteractiveComponentSize().clickable { showTags = true }.testTag("$prefix-add-tag"),
+                        shape = RoundedCornerShape(8.dp), color = Color.White,
                         border = androidx.compose.foundation.BorderStroke(1.dp, FormBorder)) {
-                        Text(stringResource(R.string.form_add_tag), Modifier.padding(horizontal = 14.dp, vertical = 8.dp), fontSize = 14.sp, color = Color(0xFF49454F))
+                        Text(stringResource(R.string.form_add_tag), Modifier.heightIn(min = 32.dp).padding(horizontal = 16.dp, vertical = 6.dp),
+                            fontSize = 14.sp, lineHeight = 20.sp, fontWeight = FontWeight.Medium, color = FormMuted)
                     }
                 }
                 FormField(address, { address = it }, stringResource(R.string.destination_address), stringResource(R.string.form_address_hint), "$prefix-address",
