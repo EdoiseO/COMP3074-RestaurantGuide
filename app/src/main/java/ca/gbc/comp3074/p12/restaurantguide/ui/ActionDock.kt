@@ -43,7 +43,7 @@ fun ActionDock(
                 horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
                 val labelStyle = TextStyle(fontFamily = FontFamily.SansSerif,
-                    fontWeight = FontWeight.Bold, fontSize = 14.sp, lineHeight = 24.sp)
+                    fontWeight = FontWeight.Bold, fontSize = 18.sp, lineHeight = 24.sp)
                 OutlinedButton(
                     onClick = cancel,
                     modifier = cancelModifier.weight(136f).heightIn(min = 48.dp).fillMaxHeight(),
