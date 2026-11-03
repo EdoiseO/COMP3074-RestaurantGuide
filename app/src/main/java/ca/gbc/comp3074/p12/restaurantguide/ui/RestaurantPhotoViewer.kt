@@ -78,6 +78,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.IntSize
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
@@ -310,8 +311,9 @@ fun RestaurantPhotoViewer(
                         ) }
                     }
                     if (!cramped) {
-                        Text(stringResource(R.string.photo_viewer_guidance), color = Color(0xFFB9B5BD),
-                            fontSize = 12.sp, modifier = Modifier.fillMaxWidth().padding(bottom = if (compact) 4.dp else 12.dp),
+                        // Figma 41:212: Roboto Bold 14/24, white.
+                        Text(stringResource(R.string.photo_viewer_guidance), color = Color.White,
+                            fontSize = 14.sp, lineHeight = 24.sp, fontWeight = FontWeight.Bold, modifier = Modifier.fillMaxWidth().padding(bottom = if (compact) 4.dp else 12.dp),
                             textAlign = TextAlign.Center)
                     }
                     LazyRow(
@@ -331,14 +333,7 @@ fun RestaurantPhotoViewer(
                             Box(
                                 modifier = Modifier
                                     .size(if (compact) 48.dp else 72.dp)
-                                    .clip(RoundedCornerShape(14.dp))
-                                    .border(
-                                        BorderStroke(
-                                            if (isActive) 2.dp else 1.dp,
-                                            if (isActive) Color.White else Color(0xFF49454F),
-                                        ),
-                                        RoundedCornerShape(14.dp),
-                                    )
+                                    .clip(RoundedCornerShape(8.dp))
                                     .clickable(role = Role.Button) {
                                         scope.launch { pager.animateScrollToPage(index) }
                                     }
@@ -346,12 +341,13 @@ fun RestaurantPhotoViewer(
                                         contentDescription = description
                                         selected = isActive
                                     }
-                                    .padding(if (isActive) 3.dp else 2.dp),
+                                    // Figma 41:212: 72px, radius 8, 2px white stroke inside on the active photo.
+                                    .border(BorderStroke(2.dp, if (isActive) Color.White else Color.Transparent), RoundedCornerShape(8.dp)),
                             ) {
                                 RestaurantPhotoImage(
                                     photo = photo,
                                     contentDescription = null,
-                                    modifier = Modifier.fillMaxSize().clip(RoundedCornerShape(11.dp)),
+                                    modifier = Modifier.fillMaxSize(),
                                 )
                             }
                         }
@@ -481,12 +477,12 @@ private fun PhotoViewerHeader(name: String, count: String?, onClose: () -> Unit,
             Text(
                 text = name,
                 color = Color.White,
-                style = MaterialTheme.typography.titleMedium,
+                fontSize = 18.sp, lineHeight = 24.sp, fontWeight = FontWeight.Bold,
                 maxLines = if (compact) 1 else 2,
                 overflow = TextOverflow.Ellipsis,
             )
             count?.let {
-                Text(it, color = Color(0xFFB9B5BD), style = MaterialTheme.typography.bodyMedium)
+                Text(it, color = Color.White, fontSize = 14.sp, lineHeight = 24.sp, fontWeight = FontWeight.Bold)
             }
         }
         IconButton(
