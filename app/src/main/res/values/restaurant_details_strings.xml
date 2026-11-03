@@ -19,8 +19,6 @@
     <string name="details_rating_accessibility">Your rating: %1$s/5 stars</string>
     <string name="details_not_added">Not added</string>
     <string name="details_add_visit_photo">Add a visit photo</string>
-    <string name="details_choose_photo">+ Choose photo</string>
     <string name="details_selected_photo">Selected visit photo</string>
     <string name="details_caption">Caption (optional)</string>
-    <string name="details_caption_hint">Describe this photo…</string>
 </resources>
