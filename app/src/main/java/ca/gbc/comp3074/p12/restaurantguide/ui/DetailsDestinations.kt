@@ -127,16 +127,28 @@ fun getDirectionsUri(restaurant: Restaurant): Uri = (
         Uri.encode("${restaurant.name}, ${restaurant.address}")
 ).toUri()
 
-fun restaurantEmailIntent(restaurant: Restaurant): Intent = Intent(Intent.ACTION_SENDTO).apply {
-    data = "mailto:".toUri()
+fun restaurantShareIntent(restaurant: Restaurant): Intent = Intent(Intent.ACTION_SEND).apply {
+    type = "text/plain"
     putExtra(Intent.EXTRA_SUBJECT, restaurant.name)
     putExtra(Intent.EXTRA_TEXT, restaurantShareBody(restaurant))
 }
 
-/** Starts only an email draft. If the device has no mail handler, display a copyable preview. */
+internal fun launchRestaurantShare(
+    restaurant: Restaurant,
+    title: String,
+    canHandle: (Intent) -> Boolean,
+    launch: (Intent) -> Unit,
+) {
+    val payload = restaurantShareIntent(restaurant)
+    if (!canHandle(payload)) throw ActivityNotFoundException("No text sharing app is available")
+    launch(Intent.createChooser(payload, title))
+}
+
+/** Shares the complete record through Android's chooser, including installed email apps. */
 @Composable
-fun RestaurantEmailEntry(restaurant: Restaurant, onBack: () -> Unit) {
+fun RestaurantShareEntry(restaurant: Restaurant, onBack: () -> Unit) {
     val context: Context = LocalContext.current
+    val shareTitle = stringResource(R.string.details_share)
     var unavailable by rememberSaveable(restaurant.id) { mutableStateOf(false) }
     var attempted by rememberSaveable(restaurant.id) { mutableStateOf(false) }
     BackHandler(onBack = onBack)
@@ -144,7 +156,9 @@ fun RestaurantEmailEntry(restaurant: Restaurant, onBack: () -> Unit) {
         if (!attempted) {
             attempted = true
             try {
-                context.startActivity(restaurantEmailIntent(restaurant))
+                launchRestaurantShare(restaurant, shareTitle,
+                    canHandle = { it.resolveActivity(context.packageManager) != null },
+                    launch = { context.startActivity(it) })
                 onBack()
             } catch (_: ActivityNotFoundException) {
                 unavailable = true
@@ -155,20 +169,13 @@ fun RestaurantEmailEntry(restaurant: Restaurant, onBack: () -> Unit) {
         }
     }
     if (unavailable) {
-        AlertDialog(
+        AppDialog(
             onDismissRequest = onBack,
-            modifier = Modifier.testTag("email-preview"),
-            title = { Text(stringResource(R.string.details_email_unavailable_title)) },
-            text = {
-                Column(Modifier.height(360.dp).verticalScroll(rememberScrollState()),
-                    verticalArrangement = Arrangement.spacedBy(12.dp)) {
-                    Text(stringResource(R.string.details_email_unavailable_message))
-                    SelectionContainer { Text(restaurantShareBody(restaurant)) }
-                }
-            },
-            confirmButton = { TextButton(onClick = onBack) {
-                Text(stringResource(R.string.details_email_close))
-            } },
+            modifier = Modifier.testTag("share-preview"),
+            title = stringResource(R.string.details_share),
+            body = stringResource(R.string.details_share_unavailable),
+            content = { SelectionContainer { Text(restaurantShareBody(restaurant)) } },
+            actions = { AppDialogButton(stringResource(R.string.details_email_close), onBack) },
         )
     }
 }

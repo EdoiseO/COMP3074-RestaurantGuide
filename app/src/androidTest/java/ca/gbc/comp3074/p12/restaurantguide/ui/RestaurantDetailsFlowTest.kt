@@ -25,6 +25,7 @@ import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performTextReplacement
 import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.swipeUp
 import androidx.compose.ui.test.swipeLeft
 import androidx.compose.ui.test.SemanticsMatcher
 import androidx.test.platform.app.InstrumentationRegistry
@@ -69,13 +70,13 @@ class RestaurantDetailsFlowTest {
     @Test fun deleteCancelThenConfirmRemovesOnlySelectedRecord() {
         compose.setContent { RestaurantGuideTheme { RestaurantListFlow() } }
         openRestaurant(3)
-        compose.onNodeWithText("Delete").performClick()
+        compose.onNodeWithTag("details-delete").performClick()
         snapshot("delete-confirmation")
         compose.onNodeWithText("Cancel").performClick()
         compose.onNodeWithTag("restaurant-details").assertIsDisplayed()
-        compose.onNodeWithText("Delete").performClick()
+        compose.onNodeWithTag("details-delete").performClick()
         compose.onNodeWithTag("confirm-delete").performClick()
-        compose.onNodeWithTag("result-count").assertTextContains("2 saved restaurants")
+        compose.onNodeWithTag("result-count").assertTextContains("2 saved")
         compose.onNodeWithTag("restaurant-card-1").assertIsDisplayed()
         compose.onNodeWithTag("restaurant-card-3").assertDoesNotExist()
         compose.onNodeWithTag("restaurant-list").performScrollToNode(hasTestTag("restaurant-card-2"))
@@ -85,12 +86,12 @@ class RestaurantDetailsFlowTest {
     @Test fun editCancelAndSaveUpdateTheSameRestaurant() {
         compose.setContent { RestaurantGuideTheme { RestaurantListFlow() } }
         openRestaurant(2)
-        compose.onNodeWithText("Edit").performClick()
+        compose.onNodeWithTag("details-edit").performClick()
         compose.onNodeWithTag("edit-name").assertTextContains("Midyeci Riza")
         compose.onNodeWithTag("edit-description").performScrollTo().performTextReplacement("Unsaved description")
         compose.onNodeWithTag("edit-back").performClick()
         compose.onNodeWithText("Turkish street food on Wilson Avenue", substring = true).assertIsDisplayed()
-        compose.onNodeWithText("Edit").performClick()
+        compose.onNodeWithTag("details-edit").performClick()
         compose.onNodeWithTag("edit-description").performScrollTo().performTextReplacement("Try the stuffed mussels and ayran.")
         compose.onNodeWithTag("edit-save").performClick()
         compose.onNodeWithText("Try the stuffed mussels and ayran.").performScrollTo().assertIsDisplayed()
@@ -124,33 +125,29 @@ class RestaurantDetailsFlowTest {
         compose.onNodeWithTag("details-photo-0").assertIsDisplayed()
     }
 
-    @Test fun mapAndEmailUseSelectedRecordAndBackKeepsListSearch() {
-        val noEmail = MissingEmailContext(compose.activity)
+    @Test fun mapAndShareUseSelectedRecordAndBackKeepsListSearch() {
+        val noShare = MissingShareContext(compose.activity)
         compose.setContent {
-            CompositionLocalProvider(LocalContext provides noEmail) {
+            CompositionLocalProvider(LocalContext provides noShare) {
                 RestaurantGuideTheme { RestaurantListFlow() }
             }
         }
         compose.onNodeWithTag("restaurant-search").performTextInput("Unica")
         compose.onNodeWithTag("restaurant-card-3").performClick()
-        compose.onNodeWithTag("details-full-map").performScrollTo().performClick()
+        compose.onNodeWithTag("details-full-map").performClick()
         compose.onNodeWithTag("full-map-preview").assertIsDisplayed()
         compose.onNodeWithText("850 Wilson Ave, North York, ON M3K 1E5").assertIsDisplayed()
         snapshot("la-unica-full-map")
         val record = DemoRestaurants.restaurants[2]
         assertTrue(getDirectionsUri(record).getQueryParameter("destination")!!.contains(record.address))
         compose.onNodeWithTag("map-back").performClick()
-        compose.onNodeWithTag("details-email").performScrollTo().performClick()
-        compose.onNodeWithTag("email-preview").assertIsDisplayed()
-        assertEquals(Intent.ACTION_SENDTO, noEmail.attempted?.action)
-        assertEquals("mailto", noEmail.attempted?.data?.scheme)
-        assertEquals(record.name, noEmail.attempted?.getStringExtra(Intent.EXTRA_SUBJECT))
-        assertEquals(restaurantShareBody(record), noEmail.attempted?.getStringExtra(Intent.EXTRA_TEXT))
-        snapshot("email-preview")
+        compose.onNodeWithTag("details-share").performClick()
+        compose.onNodeWithTag("share-preview").assertIsDisplayed()
+        snapshot("share-preview")
         compose.onNodeWithText("Close").performClick()
         compose.onNodeWithText("← Back").performClick()
         compose.onNodeWithTag("restaurant-search").assertTextContains("Unica")
-        compose.onNodeWithTag("result-count").assertTextContains("1 saved restaurant")
+        compose.onNodeWithTag("result-count").assertTextContains("1 saved")
     }
 
     @Test fun unavailableSelectedPhotoKeepsCaptionAcrossRestoration() {
@@ -172,6 +169,48 @@ class RestaurantDetailsFlowTest {
         compose.onNodeWithTag("restaurant-details").assertIsDisplayed()
     }
 
+    @Test fun fixedActionsStayReachableAndNotesClearTheDock() {
+        compose.setContent { RestaurantGuideTheme { RestaurantListFlow() } }
+        openRestaurant(1)
+        val editBounds = compose.onNodeWithTag("details-edit").fetchSemanticsNode().boundsInRoot
+        val dockBounds = compose.onNodeWithTag("details-action-dock").fetchSemanticsNode().boundsInRoot
+        compose.onNodeWithTag("details-scroll").performTouchInput { swipeUp() }
+        compose.onNodeWithTag("details-edit-notes").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithTag("details-back").assertIsDisplayed()
+        compose.onNodeWithTag("details-edit").assertIsDisplayed()
+        compose.onNodeWithTag("details-share").assertIsDisplayed()
+        compose.onNodeWithTag("details-delete").assertIsDisplayed()
+        assertEquals(editBounds, compose.onNodeWithTag("details-edit").fetchSemanticsNode().boundsInRoot)
+        assertEquals(dockBounds, compose.onNodeWithTag("details-action-dock").fetchSemanticsNode().boundsInRoot)
+        val notesBounds = compose.onNodeWithTag("details-edit-notes").fetchSemanticsNode().boundsInRoot
+        assertTrue("Notes edit must scroll fully above the dock", notesBounds.bottom <= dockBounds.top)
+        compose.onNodeWithText("Share by email").assertDoesNotExist()
+        compose.onNodeWithTag("details-edit").performClick()
+        compose.onNodeWithTag("edit-name").assertTextContains("Two Brothers Shawarma")
+        compose.onNodeWithTag("edit-cancel").performClick()
+        compose.onNodeWithTag("details-back").performClick()
+        compose.onNodeWithTag("result-count").assertTextContains("3 saved")
+    }
+
+    @Test fun shareChooserIncludesCompletePayloadAndNoHandlerDoesNotLaunch() {
+        val record = DemoRestaurants.restaurants[2]
+        var chooser: Intent? = null
+        launchRestaurantShare(record, "Share restaurant", canHandle = { true }, launch = { chooser = it })
+        assertEquals(Intent.ACTION_CHOOSER, chooser?.action)
+        @Suppress("DEPRECATION")
+        val payload = chooser?.getParcelableExtra<Intent>(Intent.EXTRA_INTENT)
+        assertEquals(Intent.ACTION_SEND, payload?.action)
+        assertEquals("text/plain", payload?.type)
+        assertEquals(record.name, payload?.getStringExtra(Intent.EXTRA_SUBJECT))
+        assertEquals(restaurantShareBody(record), payload?.getStringExtra(Intent.EXTRA_TEXT))
+        var unavailable = false
+        try {
+            launchRestaurantShare(record, "Share restaurant", canHandle = { false },
+                launch = { throw AssertionError("Must not open an empty chooser") })
+        } catch (_: ActivityNotFoundException) { unavailable = true }
+        assertTrue(unavailable)
+    }
+
     private fun openRestaurant(id: Int) {
         compose.onNodeWithTag("restaurant-list").performScrollToNode(hasTestTag("restaurant-card-$id"))
         compose.onNodeWithTag("restaurant-card-$id").performClick()
@@ -187,11 +226,11 @@ class RestaurantDetailsFlowTest {
         bitmap.recycle()
     }
 
-    private class MissingEmailContext(context: Context) : ContextWrapper(context) {
+    private class MissingShareContext(context: Context) : ContextWrapper(context) {
         var attempted: Intent? = null
         override fun startActivity(intent: Intent) {
             attempted = intent
-            throw ActivityNotFoundException("Deterministic no-email-handler test fixture")
+            throw ActivityNotFoundException("Deterministic no-share-handler test fixture")
         }
     }
 }

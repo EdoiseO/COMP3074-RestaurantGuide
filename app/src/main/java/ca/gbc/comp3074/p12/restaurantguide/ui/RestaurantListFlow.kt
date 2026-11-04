@@ -49,7 +49,7 @@ fun RestaurantListFlow(initialRestaurants: List<Restaurant> = DemoRestaurants.re
         restaurants = restaurants.map { if (it.id == changed.id) changed else it }
     }
     BackHandler(enabled = route != "list") {
-        navigate(if (route in listOf("edit", "map", "email")) "details" else "list")
+        navigate(if (route in listOf("edit", "map", "email", "share")) "details" else "list")
     }
     when (route) {
         "details" -> selectedRestaurant?.let {
@@ -61,7 +61,7 @@ fun RestaurantListFlow(initialRestaurants: List<Restaurant> = DemoRestaurants.re
                     navigate("list")
                 },
                 onUpdate = updateRestaurant,
-                onMap = { navigate("map") }, onEmail = { navigate("email") },
+                onMap = { navigate("map") }, onShare = { navigate("share") },
             )
         }
         "edit" -> selectedRestaurant?.let {
@@ -73,8 +73,8 @@ fun RestaurantListFlow(initialRestaurants: List<Restaurant> = DemoRestaurants.re
         "map" -> selectedRestaurant?.let {
             RestaurantMapEntry(it, onBack = { navigate("details") })
         }
-        "email" -> selectedRestaurant?.let {
-            RestaurantEmailEntry(it, onBack = { navigate("details") })
+        "email", "share" -> selectedRestaurant?.let {
+            RestaurantShareEntry(it, onBack = { navigate("details") })
         }
         "add" -> AddRestaurantEntry(
             onBack = { navigate("list") },

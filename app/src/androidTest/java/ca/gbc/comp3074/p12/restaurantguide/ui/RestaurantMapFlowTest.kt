@@ -48,7 +48,7 @@ class RestaurantMapFlowTest {
         compose.setContent { RestaurantGuideTheme { RestaurantListFlow() } }
         DemoRestaurants.restaurants.forEach { record ->
             openRestaurant(record.id)
-            compose.onNodeWithTag("details-full-map").performScrollTo().performClick()
+            compose.onNodeWithTag("details-full-map").performClick()
             compose.onNodeWithTag("full-map-screen").assertIsDisplayed()
             compose.onNodeWithText("Full-Screen Map").assertIsDisplayed()
             compose.onNodeWithTag("full-map-preview").assertIsDisplayed().assert(
@@ -90,11 +90,11 @@ class RestaurantMapFlowTest {
         val updatedAddress = "100 Demo Street, Toronto, ON M5A 1A1"
         compose.setContent { RestaurantGuideTheme { RestaurantListFlow() } }
         openRestaurant(record.id)
-        compose.onNodeWithText("Edit").performClick()
+        compose.onNodeWithTag("details-edit").performClick()
         compose.onNodeWithTag("edit-address").performScrollTo().performTextReplacement(updatedAddress)
         closeSoftKeyboard()
         compose.onNodeWithTag("edit-save").performClick()
-        compose.onNodeWithTag("details-full-map").performScrollTo().performClick()
+        compose.onNodeWithTag("details-full-map").performClick()
         compose.onNodeWithTag("map-address").assertTextEquals(updatedAddress)
         compose.onNodeWithText("Illustrative preview · saved address below").assertIsDisplayed()
         compose.onNodeWithTag("full-map-preview").assertIsDisplayed().assert(

@@ -28,20 +28,20 @@ class RestaurantListFlowTest {
     @Test fun searchAndMultipleFiltersSurviveDetailsBackAndRestoration() {
         val restoration = StateRestorationTester(compose)
         restoration.setContent { RestaurantGuideTheme { RestaurantListFlow() } }
-        compose.onNodeWithTag("result-count").assertTextContains("3 saved restaurants")
+        compose.onNodeWithTag("result-count").assertTextContains("3 saved")
         compose.onNodeWithContentDescription("Clear search").performClick()
-        compose.onNodeWithTag("result-count").assertTextContains("3 saved restaurants")
+        compose.onNodeWithTag("result-count").assertTextContains("3 saved")
         snapshot("default")
         compose.onNodeWithTag("filter-tag-Shawarma").performClick()
         compose.onNodeWithTag("filter-tag-Turkish").performClick()
-        compose.onNodeWithTag("result-count").assertTextContains("2 saved restaurants")
+        compose.onNodeWithTag("result-count").assertTextContains("2 saved")
         snapshot("multiple-filters")
         compose.onNodeWithTag("restaurant-search").performTextInput("Brothers")
         // The count must update while typing, before the keyboard's Search action.
-        compose.onNodeWithTag("result-count").assertTextContains("1 saved restaurant")
+        compose.onNodeWithTag("result-count").assertTextContains("1 saved")
         compose.onNodeWithTag("restaurant-search").performImeAction()
         snapshot("live-search")
-        compose.onNodeWithTag("result-count").assertTextContains("1 saved restaurant")
+        compose.onNodeWithTag("result-count").assertTextContains("1 saved")
         compose.onNodeWithTag("restaurant-card-1").performClick()
         compose.onNodeWithTag("restaurant-details").assertIsDisplayed()
         compose.onNodeWithText("Two Brothers Shawarma").assertIsDisplayed()
@@ -51,9 +51,9 @@ class RestaurantListFlowTest {
         assertSearchState()
         compose.onNodeWithTag("filter-All").performClick()
         compose.onNodeWithTag("filter-All").assertIsSelected()
-        compose.onNodeWithTag("result-count").assertTextContains("1 saved restaurant")
+        compose.onNodeWithTag("result-count").assertTextContains("1 saved")
         compose.onNodeWithContentDescription("Clear search").performClick()
-        compose.onNodeWithTag("result-count").assertTextContains("3 saved restaurants")
+        compose.onNodeWithTag("result-count").assertTextContains("3 saved")
     }
 
     @Test fun noResultsHasWorkingResetAndAboutNavigation() {
@@ -64,12 +64,12 @@ class RestaurantListFlowTest {
         compose.onNodeWithTag("add-restaurant").assertIsDisplayed()
         snapshot("no-results")
         compose.onNodeWithText("Clear search and filters").performClick()
-        compose.onNodeWithTag("result-count").assertTextContains("3 saved restaurants")
-        compose.onNodeWithText("About").performClick()
+        compose.onNodeWithTag("result-count").assertTextContains("3 saved")
+        compose.onNodeWithTag("list-about").performClick()
         compose.onNodeWithText("Team members").assertIsDisplayed()
         compose.onNodeWithText("Kalid Ali\nPhillip Onofua\nMohamed Amine OUATAR\nJoshua Zaakir").assertIsDisplayed()
         compose.onNodeWithText("← Back").performClick()
-        compose.onNodeWithTag("result-count").assertTextContains("3 saved restaurants")
+        compose.onNodeWithTag("result-count").assertTextContains("3 saved")
     }
 
     @Test fun emptyCollectionCanAddAndFilterACustomRestaurant() {
@@ -89,13 +89,13 @@ class RestaurantListFlowTest {
             compose.onNodeWithTag("tag-save").performClick()
         }
         compose.onNodeWithText("Save").performClick()
-        compose.onNodeWithTag("result-count").assertTextContains("1 saved restaurant")
+        compose.onNodeWithTag("result-count").assertTextContains("1 saved")
         compose.onNodeWithText("My Cafe").assertIsDisplayed()
         restoration.emulateSavedInstanceStateRestore()
         compose.onNodeWithText("My Cafe").assertIsDisplayed()
         compose.onNodeWithText("all (tag)").assertIsDisplayed()
         compose.onNodeWithTag("filter-tag-Cafe").performClick()
-        compose.onNodeWithTag("result-count").assertTextContains("1 saved restaurant")
+        compose.onNodeWithTag("result-count").assertTextContains("1 saved")
     }
 
     @Test fun scrollingOpensTheCorrectRestaurantAndBackKeepsPosition() {
@@ -128,7 +128,7 @@ class RestaurantListFlowTest {
         compose.onNodeWithTag("restaurant-search").assertTextContains("Brothers")
         compose.onNodeWithTag("filter-tag-Shawarma").assertIsSelected()
         compose.onNodeWithTag("filter-tag-Turkish").assertIsSelected()
-        compose.onNodeWithTag("result-count").assertTextContains("1 saved restaurant")
+        compose.onNodeWithTag("result-count").assertTextContains("1 saved")
     }
 
     private fun snapshot(name: String) {

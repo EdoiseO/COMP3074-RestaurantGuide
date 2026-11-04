@@ -7,7 +7,9 @@
     <string name="details_photo_number">Photo %1$d of %2$s</string>
     <string name="details_view_photo">View photo</string>
     <string name="details_full_map">View full map</string>
-    <string name="details_share_email">Share by email</string>
+    <string name="details_share">Share restaurant</string>
+    <string name="details_open_maps">Open in Maps</string>
+    <string name="details_notes_body">Remember what you ordered and what you would try again.</string>
     <string name="details_notes">Notes</string>
     <string name="details_notes_empty">Add your visit notes here.</string>
     <string name="details_edit_notes">Edit visit notes</string>
@@ -15,10 +17,11 @@
     <string name="details_notes_hint">What did you order? Would you get it again?</string>
     <string name="details_cancel">Cancel</string>
     <string name="details_delete_title">Delete restaurant?</string>
-    <string name="details_delete_body">This removes the restaurant\nand its saved notes.</string>
+    <string name="details_delete_body">This removes the restaurant and its saved notes.</string>
     <string name="details_rating_accessibility">Your rating: %1$s/5 stars</string>
     <string name="details_not_added">Not added</string>
     <string name="details_add_visit_photo">Add a visit photo</string>
     <string name="details_selected_photo">Selected visit photo</string>
     <string name="details_caption">Caption (optional)</string>
+    <string name="details_share_unavailable">No sharing app is available. You can copy these restaurant details.</string>
 </resources>

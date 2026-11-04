@@ -5,6 +5,7 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -13,7 +14,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.imePadding
-import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.consumeWindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -22,7 +23,6 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
@@ -74,6 +74,7 @@ private val FilterTextColor = Color(0xFF4A4459)
 private val SelectedFilterColor = Color(0xFFE8DEF8)
 private val ListBorderColor = Color(0xFFCAC4D0)
 
+@OptIn(androidx.compose.foundation.layout.ExperimentalLayoutApi::class)
 @Composable
 fun RestaurantListScreen(
     restaurants: List<Restaurant>,
@@ -95,29 +96,41 @@ fun RestaurantListScreen(
     val availableTags = categories + allTags.filterNot { it in categories }.sorted()
     Scaffold(
         modifier = Modifier.imePadding(),
+        containerColor = RestaurantGuideTokens.homeBackground,
         floatingActionButton = {
             FloatingActionButton(
                 onClick = onAddClick,
                 containerColor = MaterialTheme.colorScheme.primary,
                 contentColor = MaterialTheme.colorScheme.onPrimary,
-                shape = CircleShape,
+                shape = RoundedCornerShape(16.dp),
                 elevation = FloatingActionButtonDefaults.elevation(0.dp, 0.dp, 0.dp, 0.dp),
-                modifier = Modifier.size(80.dp).testTag("add-restaurant"),
-            ) { Icon(painterResource(R.drawable.ic_add), stringResource(R.string.list_add), Modifier.size(40.dp)) }
+                modifier = Modifier.size(72.dp).testTag("add-restaurant"),
+            ) { Icon(painterResource(R.drawable.ic_add), stringResource(R.string.list_add), Modifier.size(28.dp)) }
         },
     ) { padding ->
-        Column(Modifier.fillMaxSize().padding(padding).padding(horizontal = 20.dp)) {
-            Row(
-                Modifier.fillMaxWidth().padding(bottom = 4.dp),
-                verticalAlignment = Alignment.CenterVertically,
+        Column(Modifier.fillMaxSize().padding(padding).consumeWindowInsets(padding).padding(horizontal = 20.dp).padding(top = 16.dp)) {
+            FlowRow(
+                Modifier.fillMaxWidth().padding(bottom = 8.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                itemVerticalAlignment = Alignment.CenterVertically,
             ) {
                 Text(
                     stringResource(R.string.app_name),
-                    Modifier.weight(1f).semantics { heading() },
-                    color = ListHeadingColor,
-                    style = MaterialTheme.typography.titleLarge.copy(fontSize = 22.sp),
+                    Modifier.semantics { heading() },
+                    color = RestaurantGuideTokens.ink,
+                    fontSize = 24.sp, lineHeight = 32.sp, fontWeight = FontWeight.Bold,
                 )
-                TextButton(onClick = onAboutClick) { Text(stringResource(R.string.list_about)) }
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        pluralStringResource(R.plurals.list_saved_count, visibleRestaurants.size, visibleRestaurants.size),
+                        Modifier.testTag("result-count"), color = ListHeadingColor,
+                        fontSize = 16.sp, lineHeight = 24.sp, fontWeight = FontWeight.Medium,
+                    )
+                    IconButton(onClick = onAboutClick, modifier = Modifier.testTag("list-about")) {
+                        Icon(painterResource(R.drawable.ic_info), stringResource(R.string.list_about),
+                            Modifier.size(20.dp), tint = ListHeadingColor)
+                    }
+                }
             }
             RestaurantSearchField(query, onQueryChange)
             LazyRow(
@@ -133,13 +146,7 @@ fun RestaurantListScreen(
                     TagFilter(label, tag in selectedTags, { onTagClick(tag) }, "filter-tag-" + tag)
                 }
             }
-            val countText = pluralStringResource(R.plurals.list_saved_count, visibleRestaurants.size, visibleRestaurants.size)
-            Text(
-                countText, Modifier.padding(top = 8.dp, bottom = 16.dp).testTag("result-count"),
-                color = ListHeadingColor,
-                style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.SemiBold,
-            )
+            androidx.compose.foundation.layout.Spacer(Modifier.height(16.dp))
             if (visibleRestaurants.isEmpty()) {
                 Column(
                     Modifier.fillMaxWidth().background(MaterialTheme.colorScheme.surfaceVariant, RoundedCornerShape(24.dp)).padding(24.dp),
@@ -181,39 +188,34 @@ private fun RestaurantSearchField(query: String, onQueryChange: (String) -> Unit
     val keyboard = LocalSoftwareKeyboardController.current
     val label = stringResource(R.string.list_search_label)
     val primary = MaterialTheme.colorScheme.primary
-    Box(Modifier.fillMaxWidth().padding(top = 6.dp)) {
-        Box(Modifier.fillMaxWidth().heightIn(min = 56.dp).border(3.dp, primary, RoundedCornerShape(4.dp))) {
-            BasicTextField(
-                value = query,
-                onValueChange = onQueryChange,
-                modifier = Modifier.fillMaxWidth().heightIn(min = 56.dp)
-                    .testTag("restaurant-search").semantics { contentDescription = label },
-                textStyle = MaterialTheme.typography.bodyLarge.copy(color = ListTextColor),
-                cursorBrush = SolidColor(primary),
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
-                keyboardActions = KeyboardActions(onSearch = { focus.clearFocus(); keyboard?.hide() }),
-                decorationBox = { innerTextField ->
-                    Box(Modifier.padding(start = 12.dp, end = 48.dp, top = 16.dp, bottom = 16.dp)) {
-                        if (query.isEmpty()) Text(
-                            stringResource(R.string.list_search_hint), color = ListTextColor,
-                            style = MaterialTheme.typography.bodyLarge,
-                            maxLines = 1, overflow = TextOverflow.Ellipsis,
-                        )
-                        innerTextField()
-                    }
-                },
-            )
-            IconButton(onClick = { onQueryChange("") }, Modifier.align(Alignment.CenterEnd)) {
-                Icon(painterResource(R.drawable.ic_cancel_outline), stringResource(R.string.list_clear_search), tint = ListTextColor)
-            }
-        }
-        Text(
-            label,
-            Modifier.offset(x = 12.dp, y = (-8).dp).background(MaterialTheme.colorScheme.surface).padding(horizontal = 4.dp),
-            color = primary,
-            style = MaterialTheme.typography.labelSmall.copy(fontSize = 12.sp),
+    Row(
+        Modifier.fillMaxWidth().heightIn(min = 56.dp)
+            .background(Color.White, RoundedCornerShape(16.dp))
+            .border(1.dp, RestaurantGuideTokens.searchBorder, RoundedCornerShape(16.dp))
+            .padding(start = 16.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Icon(painterResource(R.drawable.ic_search), null, Modifier.size(24.dp), tint = ListTextColor)
+        BasicTextField(
+            value = query, onValueChange = onQueryChange,
+            modifier = Modifier.weight(1f).padding(start = 12.dp, top = 16.dp, bottom = 16.dp)
+                .testTag("restaurant-search").semantics { contentDescription = label },
+            textStyle = MaterialTheme.typography.bodyLarge.copy(color = ListTextColor),
+            cursorBrush = SolidColor(primary), singleLine = true,
+            keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+            keyboardActions = KeyboardActions(onSearch = { focus.clearFocus(); keyboard?.hide() }),
+            decorationBox = { innerTextField ->
+                Box {
+                    if (query.isEmpty()) Text(stringResource(R.string.list_search_hint),
+                        color = ListTextColor, style = MaterialTheme.typography.bodyLarge,
+                        maxLines = 1, overflow = TextOverflow.Ellipsis)
+                    innerTextField()
+                }
+            },
         )
+        IconButton(onClick = { onQueryChange("") }, modifier = Modifier.testTag("clear-search")) {
+            Icon(painterResource(R.drawable.ic_cancel_outline), stringResource(R.string.list_clear_search), tint = ListTextColor)
+        }
     }
 }
 
@@ -225,7 +227,7 @@ private fun TagFilter(label: String, selected: Boolean, onClick: () -> Unit, tes
         leadingIcon = if (selected) { { Icon(painterResource(R.drawable.ic_check), null, Modifier.size(18.dp)) } } else null,
         shape = RoundedCornerShape(8.dp),
         colors = FilterChipDefaults.filterChipColors(
-            containerColor = MaterialTheme.colorScheme.surface,
+            containerColor = RestaurantGuideTokens.homeBackground,
             labelColor = FilterTextColor,
             selectedContainerColor = SelectedFilterColor,
             selectedLabelColor = FilterTextColor,
@@ -255,7 +257,7 @@ private fun RestaurantCard(restaurant: Restaurant, onClick: () -> Unit) {
                     RestaurantPhoto(resourceId = restaurant.photoRes)
                 },
                 contentDescription = stringResource(R.string.list_photo, restaurant.name),
-                modifier = Modifier.fillMaxWidth().height(136.dp), contentScale = ContentScale.Crop,
+                modifier = Modifier.fillMaxWidth().height(160.dp), contentScale = ContentScale.Crop,
                 alignment = when {
                     restaurant.coverUri.isNotBlank() -> Alignment.Center
                     restaurant.photoRes == R.drawable.midyeci_riza -> BiasAlignment(0f, -0.5f)
@@ -265,7 +267,7 @@ private fun RestaurantCard(restaurant: Restaurant, onClick: () -> Unit) {
             )
         } else {
             Box(
-                Modifier.fillMaxWidth().height(136.dp).background(MaterialTheme.colorScheme.surfaceVariant),
+                Modifier.fillMaxWidth().height(160.dp).background(MaterialTheme.colorScheme.surfaceVariant),
                 contentAlignment = Alignment.Center,
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -274,16 +276,16 @@ private fun RestaurantCard(restaurant: Restaurant, onClick: () -> Unit) {
                 }
             }
         }
-        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+        Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Row(verticalAlignment = Alignment.Top, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 Text(
-                    restaurant.name, Modifier.weight(1f), color = ListHeadingColor,
+                    restaurant.name, Modifier.weight(1f), color = RestaurantGuideTokens.ink,
                     style = MaterialTheme.typography.titleLarge.copy(fontSize = 20.sp), fontWeight = FontWeight.Bold,
                     maxLines = 2, overflow = TextOverflow.Ellipsis,
                 )
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                    Text(formatRating(restaurant.rating), style = MaterialTheme.typography.titleMedium, color = ListTextColor)
                     Text("★", color = RestaurantGuideTokens.star, fontSize = 18.sp)
+                    Text(formatRating(restaurant.rating), style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold, color = RestaurantGuideTokens.ink)
                 }
             }
             Text(

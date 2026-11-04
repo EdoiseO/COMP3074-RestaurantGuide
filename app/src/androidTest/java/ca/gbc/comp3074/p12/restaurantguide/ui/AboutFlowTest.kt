@@ -36,12 +36,12 @@ class AboutFlowTest {
         compose.onNodeWithTag("filter-tag-Turkish").performClick()
         compose.onNodeWithTag("restaurant-search").performTextInput("Brothers")
         compose.onNodeWithTag("restaurant-search").performImeAction()
-        compose.onNodeWithText("About").performClick()
+        compose.onNodeWithTag("list-about").performClick()
         assertApprovedInformation()
         snapshot("about-default")
         compose.onNodeWithTag("about-back").performClick()
         assertListState()
-        compose.onNodeWithText("About").performClick()
+        compose.onNodeWithTag("list-about").performClick()
         compose.onNodeWithTag("about-screen").assertIsDisplayed()
         compose.runOnUiThread { compose.activity.onBackPressedDispatcher.onBackPressed() }
         assertListState()
@@ -87,7 +87,7 @@ class AboutFlowTest {
         compose.onNodeWithTag("restaurant-search").assertTextContains("Brothers")
         compose.onNodeWithTag("filter-tag-Shawarma").assertIsSelected()
         compose.onNodeWithTag("filter-tag-Turkish").assertIsSelected()
-        compose.onNodeWithTag("result-count").assertTextContains("1 saved restaurant")
+        compose.onNodeWithTag("result-count").assertTextContains("1 saved")
         compose.onNodeWithTag("restaurant-card-1").assertIsDisplayed()
     }
 
