@@ -30,7 +30,7 @@ fun AppDialog(
 ) {
     Dialog(
         onDismissRequest = onDismissRequest,
-        properties = DialogProperties(usePlatformDefaultWidth = false, decorFitsSystemWindows = false),
+        properties = DialogProperties(usePlatformDefaultWidth = false),
     ) {
         BoxWithConstraints(Modifier.safeDrawingPadding().imePadding().padding(24.dp)) {
             Surface(
