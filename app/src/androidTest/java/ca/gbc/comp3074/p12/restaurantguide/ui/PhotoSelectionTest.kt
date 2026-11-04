@@ -1,13 +1,19 @@
 package ca.gbc.comp3074.p12.restaurantguide.ui
 
 import android.accessibilityservice.AccessibilityService
+import android.app.UiAutomation
 import android.content.ContentValues
 import android.graphics.Bitmap
 import android.graphics.Color
+import android.graphics.Rect
 import android.net.Uri
 import android.os.Build
+import android.os.Bundle
 import android.os.SystemClock
 import android.provider.MediaStore
+import android.view.InputDevice
+import android.view.KeyEvent
+import android.view.MotionEvent
 import android.view.accessibility.AccessibilityNodeInfo
 import androidx.activity.ComponentActivity
 import androidx.compose.runtime.getValue
@@ -198,23 +204,46 @@ class PhotoSelectionTest {
         } finally { resolver.delete(uri, null, null) }
     }
 
-    /** No picker result injection: click a visible item in Android's own external picker. */
+    /**
+     * No picker result injection: the real external picker returns the fixture.
+     *
+     * API 33+ shows Android's Photo Picker, whose items are clickable and described by date.
+     * Older versions fall back to DocumentsUI (ACTION_OPEN_DOCUMENT). There, file tiles are
+     * not clickable views: activation goes through DocumentsUI's own gesture and key handlers,
+     * so ACTION_CLICK does nothing, and the picker reopens on whichever root it used last
+     * (Recent can be empty and Downloads never lists Pictures). For DocumentsUI the test
+     * switches to device storage, searches for the exact fixture name, focuses the single
+     * result (not its Preview button) and presses Enter, the documented keyboard activation.
+     */
     private fun selectFixtureInSystemPicker(displayName: String) {
         val automation = InstrumentationRegistry.getInstrumentation().uiAutomation
-        val deadline = SystemClock.uptimeMillis() + 15_000
+        val deadline = SystemClock.uptimeMillis() + 30_000
         var selected = false
         var capturedSelection = false
+        var docs = DocsStep.ChooseRoot
+        var stepTime = 0L
         var lastTree = "No active accessibility window"
         while (SystemClock.uptimeMillis() < deadline) {
             val root = automation.rootInActiveWindow
             if (root != null) {
                 val nodes = descendants(root)
                 lastTree = nodes.joinToString("\n") { "${it.packageName} ${it.className} ${it.viewIdResourceName} ${it.text} ${it.contentDescription}" }
-                val external = root.packageName?.toString() != compose.activity.packageName
+                val packageName = root.packageName?.toString()
+                val external = packageName != compose.activity.packageName
                 if (selected && !external) return
-                if (external) {
+                if (external && !selected && packageName == DOCUMENTS_UI) {
+                    // Give each DocumentsUI step time to settle before acting on the next screen.
+                    if (SystemClock.uptimeMillis() - stepTime > 700) {
+                        val next = documentsUiStep(docs, nodes, displayName, automation)
+                        if (next != docs) { docs = next; stepTime = SystemClock.uptimeMillis() }
+                        if (docs == DocsStep.Activated) {
+                            snapshot("photo-picker-selected", lastTree)
+                            selected = true
+                        }
+                    }
+                } else if (external) {
                     if (!selected) {
-                        // Single-select pickers describe images by capture date rather than filename.
+                        // Photo Picker describes images by capture date rather than filename.
                         // The new fixture is the most recent item; verify its returned bytes above.
                         val candidate = nodes.firstOrNull {
                             it.isVisibleToUser && (it.text?.contains(displayName) == true || it.contentDescription?.contains(displayName) == true)
@@ -243,7 +272,103 @@ class PhotoSelectionTest {
             SystemClock.sleep(100)
         }
         automation.performGlobalAction(AccessibilityService.GLOBAL_ACTION_BACK)
-        throw AssertionError("Could not complete the actual Photo Picker selection. Last visible tree:\n${lastTree.take(8_000)}")
+        throw AssertionError("Could not complete the actual system picker selection (DocumentsUI step $docs). Last visible tree:\n${lastTree.take(8_000)}")
+    }
+
+    private enum class DocsStep { ChooseRoot, OpenSearch, EnterQuery, Activate, Activated }
+
+    /** Performs at most one DocumentsUI action and returns the step that follows it. */
+    private fun documentsUiStep(
+        step: DocsStep, nodes: List<AccessibilityNodeInfo>, displayName: String, automation: UiAutomation,
+    ): DocsStep {
+        fun byId(id: String) = nodes.filter { it.isVisibleToUser && it.viewIdResourceName == "$DOCUMENTS_UI:id/$id" }
+        // Root rows and list-view files use android:id/title; grid tiles use DocumentsUI's own id.
+        fun isTitle(node: AccessibilityNodeInfo) =
+            node.viewIdResourceName == "android:id/title" || node.viewIdResourceName == "$DOCUMENTS_UI:id/title"
+        val drawerRoots = byId("roots_list").firstOrNull()
+        return when (step) {
+            DocsStep.ChooseRoot -> if (drawerRoots == null) {
+                nodes.firstOrNull { it.isVisibleToUser && it.contentDescription?.toString() == "Show roots" }
+                    ?.performAction(AccessibilityNodeInfo.ACTION_CLICK)
+                step
+            } else {
+                // The device-storage root: every root except the virtual Recent/Downloads/media roots.
+                val virtualRoots = setOf("Recent", "Downloads", "Images", "Videos", "Audio", "Documents")
+                val storageTitle = descendants(drawerRoots).firstOrNull {
+                    isTitle(it) && it.text?.toString() !in virtualRoots
+                }
+                val row = storageTitle?.let { rowInList(it, drawerRoots) }
+                if (row != null && (row.performAction(AccessibilityNodeInfo.ACTION_CLICK) || tapCenter(row, automation))) {
+                    DocsStep.OpenSearch
+                } else step
+            }
+            DocsStep.OpenSearch -> when {
+                drawerRoots != null -> step
+                byId("search_src_text").isNotEmpty() -> DocsStep.EnterQuery
+                else -> {
+                    byId("option_menu_search").firstOrNull()?.performAction(AccessibilityNodeInfo.ACTION_CLICK)
+                    step
+                }
+            }
+            DocsStep.EnterQuery -> {
+                val field = byId("search_src_text").firstOrNull() ?: return DocsStep.OpenSearch
+                val args = Bundle().apply {
+                    putCharSequence(AccessibilityNodeInfo.ACTION_ARGUMENT_SET_TEXT_CHARSEQUENCE, displayName)
+                }
+                if (field.performAction(AccessibilityNodeInfo.ACTION_SET_TEXT, args)) {
+                    pressKey(automation, KeyEvent.KEYCODE_ENTER)
+                    DocsStep.Activate
+                } else step
+            }
+            DocsStep.Activate -> {
+                // Search results only: exactly one tile for the fixture. Image grid tiles have no
+                // id but are described as "<name>, <size>, <time>"; folder/list rows use item_root.
+                val described = nodes.filter {
+                    it.isVisibleToUser && it.contentDescription?.toString()?.startsWith("$displayName,") == true
+                }
+                val tiles = described.ifEmpty { byId("item_root") }
+                val match = tiles.singleOrNull()?.takeIf { tile ->
+                    tile in described || descendants(tile).any { isTitle(it) && it.text?.toString() == displayName }
+                }
+                // DocumentsUI focuses the single result after a search; ACTION_FOCUS returns false
+                // for a node that already has focus, so accept either.
+                if (match != null && (match.isFocused || match.performAction(AccessibilityNodeInfo.ACTION_FOCUS))) {
+                    SystemClock.sleep(200)
+                    pressKey(automation, KeyEvent.KEYCODE_ENTER)
+                    DocsStep.Activated
+                } else step
+            }
+            DocsStep.Activated -> step
+        }
+    }
+
+    /** The direct child of [list] that contains [node] (a ListView row). */
+    private fun rowInList(node: AccessibilityNodeInfo, list: AccessibilityNodeInfo): AccessibilityNodeInfo? {
+        var current: AccessibilityNodeInfo? = node
+        repeat(8) {
+            val parent = current?.parent ?: return null
+            if (parent == list) return current
+            current = parent
+        }
+        return null
+    }
+
+    /** A real touch on a drawer row, used only if the row rejects ACTION_CLICK. */
+    private fun tapCenter(node: AccessibilityNodeInfo, automation: UiAutomation): Boolean {
+        val bounds = Rect().also(node::getBoundsInScreen)
+        val time = SystemClock.uptimeMillis()
+        val x = bounds.exactCenterX(); val y = bounds.exactCenterY()
+        val down = MotionEvent.obtain(time, time, MotionEvent.ACTION_DOWN, x, y, 0).apply { source = InputDevice.SOURCE_TOUCHSCREEN }
+        val up = MotionEvent.obtain(time, time + 60, MotionEvent.ACTION_UP, x, y, 0).apply { source = InputDevice.SOURCE_TOUCHSCREEN }
+        return try {
+            automation.injectInputEvent(down, true) && automation.injectInputEvent(up, true)
+        } finally { down.recycle(); up.recycle() }
+    }
+
+    private fun pressKey(automation: UiAutomation, keyCode: Int) {
+        val time = SystemClock.uptimeMillis()
+        automation.injectInputEvent(KeyEvent(time, time, KeyEvent.ACTION_DOWN, keyCode, 0), true)
+        automation.injectInputEvent(KeyEvent(time, time, KeyEvent.ACTION_UP, keyCode, 0), true)
     }
 
     private fun descendants(node: AccessibilityNodeInfo): List<AccessibilityNodeInfo> = buildList {
@@ -259,6 +384,8 @@ class PhotoSelectionTest {
         }
         return null
     }
+
+    private companion object { const val DOCUMENTS_UI = "com.android.documentsui" }
 
     private fun sha256(bytes: ByteArray): String = MessageDigest.getInstance("SHA-256").digest(bytes)
         .joinToString("") { (it.toInt() and 0xff).toString(16).padStart(2, '0') }
