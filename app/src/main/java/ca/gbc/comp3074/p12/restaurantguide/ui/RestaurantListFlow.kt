@@ -11,8 +11,10 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.collectAsState
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.lifecycle.viewmodel.compose.viewModel
 import ca.gbc.comp3074.p12.restaurantguide.data.DemoRestaurants
 import ca.gbc.comp3074.p12.restaurantguide.data.Restaurant
 import ca.gbc.comp3074.p12.restaurantguide.data.restoreRestaurantState
@@ -27,8 +29,13 @@ private val RestaurantsSaver = listSaver<List<Restaurant>, Any>(
 private val TagsSaver = listSaver<List<String>, String>(save = { it }, restore = { it })
 
 @Composable
-fun RestaurantListFlow(initialRestaurants: List<Restaurant> = DemoRestaurants.restaurants) {
-    var restaurants by rememberSaveable(stateSaver = RestaurantsSaver) { mutableStateOf(initialRestaurants) }
+fun RestaurantListFlow(
+    initialRestaurants: List<Restaurant> = DemoRestaurants.restaurants,
+    viewModel: RestaurantViewModel = viewModel()
+) {
+    // Collect persistent restaurants from Room database via ViewModel
+    val restaurants by viewModel.restaurants.collectAsState()
+
     var query by rememberSaveable { mutableStateOf("") }
     var selectedTags by rememberSaveable(stateSaver = TagsSaver) { mutableStateOf(emptyList<String>()) }
     var route by rememberSaveable { mutableStateOf("list") }
@@ -45,9 +52,12 @@ fun RestaurantListFlow(initialRestaurants: List<Restaurant> = DemoRestaurants.re
         route = destination
     }
     val selectedRestaurant = restaurants.firstOrNull { it.id == selectedId }
+
+    // Delegate updates directly to the Room database ViewModel
     val updateRestaurant: (Restaurant) -> Unit = { changed ->
-        restaurants = restaurants.map { if (it.id == changed.id) changed else it }
+        viewModel.updateRestaurant(changed)
     }
+
     BackHandler(enabled = route != "list") {
         navigate(if (route in listOf("edit", "map", "email", "share")) "details" else "list")
     }
@@ -57,7 +67,7 @@ fun RestaurantListFlow(initialRestaurants: List<Restaurant> = DemoRestaurants.re
                 it, detailsScrollState, onBack = { navigate("list") },
                 onEdit = { navigate("edit") },
                 onDelete = {
-                    restaurants = restaurants.filterNot { record -> record.id == selectedId }
+                    viewModel.deleteRestaurant(it) // Permanently delete from Room database
                     navigate("list")
                 },
                 onUpdate = updateRestaurant,
@@ -79,8 +89,9 @@ fun RestaurantListFlow(initialRestaurants: List<Restaurant> = DemoRestaurants.re
         "add" -> AddRestaurantEntry(
             onBack = { navigate("list") },
             onSave = { draft ->
-                val created = draft.copy(id = (restaurants.maxOfOrNull { it.id } ?: 0) + 1)
-                restaurants = listOf(created) + restaurants
+                // id = 0 lets Room auto-generate the primary key uniquely
+                val created = draft.copy(id = 0)
+                viewModel.addRestaurant(created) // Persist new restaurant into Room database
                 query = ""
                 selectedTags = emptyList()
                 navigate("list")
