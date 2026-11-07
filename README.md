@@ -22,7 +22,7 @@ Unit tests: `./gradlew :app:testDebugUnitTest`. Device tests: `./gradlew :app:co
 
 Includes Splash, Restaurant List, Details, Add/Edit, photo gallery with zoom, visit notes, a map preview, email sharing and About. Back preserves list filters; form Save applies changes and Back discards them.
 
-Room stores restaurant records and photo references locally. Fresh installs and resets of the unreleased version 1 database seed three demo restaurants. Normal opens and future migrations must not re-seed deleted demos. Persistent photo access remains future work. Maps use static previews with a directions URL; live maps, geocoding and current-location permissions are not implemented. Email prepares a draft intent with a copyable fallback; successful external email/navigation handoffs remain to be verified.
+Database integration is under review. Screens now observe a Room-backed `RestaurantStore` through a ViewModel, with loading/retry states and errors that keep unsaved drafts available. Save and Delete navigate only after the write succeeds. Fresh installs and resets of the unreleased version 1 database seed three demo restaurants. Normal opens and future migrations must not re-seed deleted demos. Persistent photo access remains outstanding. Maps still use static previews with a directions URL; live maps, geocoding and current-location permissions are not implemented. Share opens a text chooser with a copyable fallback; actual external handoffs still need device verification.
 
 ## Project links
 
