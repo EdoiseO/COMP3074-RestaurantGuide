@@ -123,7 +123,7 @@ private fun RatingReadout(rating: Float) {
 
 /** Add and Edit share the same draft. Leaving without Save never changes a saved record. */
 @Composable
-fun RestaurantFormEntry(restaurant: Restaurant? = null, onBack: () -> Unit, onSave: (Restaurant) -> Unit) {
+fun RestaurantFormEntry(restaurant: Restaurant? = null, onBack: () -> Unit, onSave: (Restaurant) -> Unit, saving: Boolean = false, saveError: String? = null) {
     val draftKey = restaurant?.id ?: -1
     val prefix = if (restaurant == null) "add" else "edit"
     var name by rememberSaveable(draftKey) { mutableStateOf(restaurant?.name.orEmpty()) }
@@ -154,7 +154,8 @@ fun RestaurantFormEntry(restaurant: Restaurant? = null, onBack: () -> Unit, onSa
     var showRating by rememberSaveable { mutableStateOf(false) }
     var ratingDraft by rememberSaveable { mutableStateOf(0f) }
     val scroll = rememberScrollState()
-    BackHandler(onBack = onBack)
+    val leave = { if (!saving) onBack() }
+    BackHandler(onBack = leave)
 
     val save = {
         nameError = name.isBlank()
@@ -180,12 +181,17 @@ fun RestaurantFormEntry(restaurant: Restaurant? = null, onBack: () -> Unit, onSa
         containerColor = Color.White,
         // Figma 52:213 / 50:166: fixed Cancel/Save dock; it owns the keyboard and navigation insets.
         bottomBar = {
-            ActionDock(cancel = onBack, save = save,
+            Column {
+                if (saveError != null) Text(saveError, color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp).testTag("form-save-error"))
+                ActionDock(cancel = leave, save = save, saveEnabled = !saving, cancelEnabled = !saving,
+                    saveLabel = stringResource(if (saving) R.string.storage_saving else R.string.destination_save),
                 cancelModifier = Modifier.testTag("$prefix-cancel"), saveModifier = Modifier.testTag("$prefix-save"))
+            }
         },
     ) { insets ->
         Column(Modifier.fillMaxSize().padding(insets).consumeWindowInsets(insets).testTag("restaurant-form")) {
-            FormHeader(isEdit = restaurant != null, onBack = onBack, backTag = "$prefix-back")
+            FormHeader(isEdit = restaurant != null, onBack = leave, backTag = "$prefix-back")
             Column(Modifier.fillMaxWidth().weight(1f).verticalScroll(scroll).padding(horizontal = 20.dp).padding(top = 8.dp, bottom = 24.dp)) {
                 Box(Modifier.fillMaxWidth().height(180.dp).clip(CoverShape)
                     .background(CoverFill).clickable { showCoverPicker = true }.testTag("$prefix-cover")) {

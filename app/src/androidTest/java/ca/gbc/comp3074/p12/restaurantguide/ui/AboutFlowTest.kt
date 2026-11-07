@@ -31,7 +31,7 @@ class AboutFlowTest {
     @get:Rule val compose = createAndroidComposeRule<ComponentActivity>()
 
     @Test fun aboutInformationAndBothBackActionsPreserveSearchAndSelectedFilters() {
-        compose.setContent { RestaurantGuideTheme { RestaurantListFlow() } }
+        compose.setContent { RestaurantGuideTheme { TestRestaurantListFlow() } }
         compose.onNodeWithTag("filter-tag-Shawarma").performClick()
         compose.onNodeWithTag("filter-tag-Turkish").performClick()
         compose.onNodeWithTag("restaurant-search").performTextInput("Brothers")

@@ -27,7 +27,7 @@ class RestaurantListFlowTest {
 
     @Test fun searchAndMultipleFiltersSurviveDetailsBackAndRestoration() {
         val restoration = StateRestorationTester(compose)
-        restoration.setContent { RestaurantGuideTheme { RestaurantListFlow() } }
+        restoration.setContent { RestaurantGuideTheme { TestRestaurantListFlow() } }
         compose.onNodeWithTag("result-count").assertTextContains("3 saved")
         compose.onNodeWithContentDescription("Clear search").performClick()
         compose.onNodeWithTag("result-count").assertTextContains("3 saved")
@@ -57,7 +57,7 @@ class RestaurantListFlowTest {
     }
 
     @Test fun noResultsHasWorkingResetAndAboutNavigation() {
-        compose.setContent { RestaurantGuideTheme { RestaurantListFlow() } }
+        compose.setContent { RestaurantGuideTheme { TestRestaurantListFlow() } }
         compose.onNodeWithTag("restaurant-search").performTextInput("does-not-exist")
         compose.onNodeWithTag("restaurant-search").performImeAction()
         compose.onNodeWithText("No restaurants found").assertIsDisplayed()
@@ -74,7 +74,7 @@ class RestaurantListFlowTest {
 
     @Test fun emptyCollectionCanAddAndFilterACustomRestaurant() {
         val restoration = StateRestorationTester(compose)
-        restoration.setContent { RestaurantGuideTheme { RestaurantListFlow(emptyList()) } }
+        restoration.setContent { RestaurantGuideTheme { TestRestaurantListFlow(emptyList()) } }
         compose.onNodeWithText("No restaurants saved yet").assertIsDisplayed()
         snapshot("empty-list")
         compose.onNodeWithTag("add-restaurant").performClick()
@@ -99,7 +99,7 @@ class RestaurantListFlowTest {
     }
 
     @Test fun scrollingOpensTheCorrectRestaurantAndBackKeepsPosition() {
-        compose.setContent { RestaurantGuideTheme { RestaurantListFlow() } }
+        compose.setContent { RestaurantGuideTheme { TestRestaurantListFlow() } }
         compose.onNodeWithTag("restaurant-list").performScrollToNode(hasTestTag("restaurant-card-3"))
         compose.onNodeWithContentDescription("Photo of La Unica").assertIsDisplayed()
         snapshot("third-card")

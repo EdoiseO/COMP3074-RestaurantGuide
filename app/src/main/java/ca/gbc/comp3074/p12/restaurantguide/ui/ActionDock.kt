@@ -26,6 +26,7 @@ fun ActionDock(
     save: () -> Unit,
     modifier: Modifier = Modifier,
     saveEnabled: Boolean = true,
+    cancelEnabled: Boolean = true,
     cancelLabel: String = stringResource(R.string.details_cancel),
     saveLabel: String = stringResource(R.string.destination_save),
     cancelModifier: Modifier = Modifier,
@@ -46,6 +47,7 @@ fun ActionDock(
                     fontWeight = FontWeight.Bold, fontSize = 18.sp, lineHeight = 24.sp)
                 OutlinedButton(
                     onClick = cancel,
+                    enabled = cancelEnabled,
                     modifier = cancelModifier.weight(136f).heightIn(min = 48.dp).fillMaxHeight(),
                     shape = RoundedCornerShape(12.dp),
                     border = BorderStroke(1.dp, RestaurantGuideTokens.dockBorder),

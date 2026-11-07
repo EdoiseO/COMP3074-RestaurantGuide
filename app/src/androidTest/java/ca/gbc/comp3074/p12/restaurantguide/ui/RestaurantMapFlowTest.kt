@@ -45,7 +45,7 @@ class RestaurantMapFlowTest {
     @get:Rule val compose = createAndroidComposeRule<ComponentActivity>()
 
     @Test fun eachSelectedMapShowsItsSavedAddressAndBackReturnsToSameDetails() {
-        compose.setContent { RestaurantGuideTheme { RestaurantListFlow() } }
+        compose.setContent { RestaurantGuideTheme { TestRestaurantListFlow() } }
         DemoRestaurants.restaurants.forEach { record ->
             openRestaurant(record.id)
             compose.onNodeWithTag("details-full-map").performClick()
@@ -88,7 +88,7 @@ class RestaurantMapFlowTest {
     @Test fun editedAddressUsesCurrentSavedAddressAndClearlyLabelledIllustrativeMap() {
         val record = DemoRestaurants.restaurants.first()
         val updatedAddress = "100 Demo Street, Toronto, ON M5A 1A1"
-        compose.setContent { RestaurantGuideTheme { RestaurantListFlow() } }
+        compose.setContent { RestaurantGuideTheme { TestRestaurantListFlow() } }
         openRestaurant(record.id)
         compose.onNodeWithTag("details-edit").performClick()
         compose.onNodeWithTag("edit-address").performScrollTo().performTextReplacement(updatedAddress)

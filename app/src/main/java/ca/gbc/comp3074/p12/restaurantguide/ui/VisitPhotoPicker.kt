@@ -73,6 +73,8 @@ fun VisitPhotoPicker(
     initialUri: String? = null,
     initialCaption: String = "",
     includeCaption: Boolean = true,
+    saving: Boolean = false,
+    saveError: String? = null,
     title: String? = null,
     body: String? = if (title == null) stringResource(R.string.visit_photo_body) else null,
 ) {
@@ -98,6 +100,7 @@ fun VisitPhotoPicker(
         modifier = Modifier.testTag("visit-photo-picker"),
         body = body,
         content = {
+            if (saveError != null) Text(saveError, color = MaterialTheme.colorScheme.error, modifier = Modifier.testTag("photo-save-error"))
             uri?.let { selected ->
                 key(selectionRevision) {
                     RestaurantPhotoImage(
@@ -136,10 +139,10 @@ fun VisitPhotoPicker(
             }
         },
     ) {
-        AppDialogButton(stringResource(R.string.details_cancel), onDismiss, Modifier.testTag("visit-photo-cancel"))
+        AppDialogButton(stringResource(R.string.details_cancel), onDismiss, Modifier.testTag("visit-photo-cancel"), enabled = !saving)
         AppDialogButton(
             stringResource(R.string.destination_save),
-            enabled = saveReady,
+            enabled = saveReady && !saving,
             modifier = Modifier.testTag("visit-photo-save"),
             onClick = {
                 uri?.takeIf { status == PhotoLoadStatus.Ready }?.let { selected ->

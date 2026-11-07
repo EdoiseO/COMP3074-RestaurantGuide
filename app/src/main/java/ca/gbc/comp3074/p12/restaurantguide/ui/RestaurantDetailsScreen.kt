@@ -103,6 +103,10 @@ fun RestaurantDetailsScreen(
     onUpdate: (Restaurant) -> Unit,
     onMap: () -> Unit,
     onShare: () -> Unit,
+    saving: Boolean = false,
+    saveError: String? = null,
+    saveRevision: Int? = null,
+    onClearSaveError: () -> Unit = {},
 ) {
     var deleteOpen by rememberSaveable(restaurant.id) { mutableStateOf(false) }
     var notesOpen by rememberSaveable(restaurant.id) { mutableStateOf(false) }
@@ -110,6 +114,12 @@ fun RestaurantDetailsScreen(
     var photoIndex by rememberSaveable(restaurant.id) { mutableStateOf(0) }
     var viewingCover by rememberSaveable(restaurant.id) { mutableStateOf(false) }
     var addPhotoOpen by rememberSaveable(restaurant.id) { mutableStateOf(false) }
+    var pendingRevision by rememberSaveable { mutableStateOf<Int?>(null) }
+    androidx.compose.runtime.LaunchedEffect(saveRevision) {
+        if (pendingRevision != null && saveRevision != pendingRevision) {
+            notesOpen = false; addPhotoOpen = false; pendingRevision = null
+        }
+    }
     val photos = restaurantPhotos(restaurant)
     val cover = restaurantCoverPhoto(restaurant)
     val openPhoto: (Int) -> Unit = { index -> viewingCover = false; photoIndex = index; photoOpen = true }
@@ -254,27 +264,31 @@ fun RestaurantDetailsScreen(
         AppDialog(
             title = stringResource(R.string.details_delete_title),
             body = stringResource(R.string.details_delete_body),
-            onDismissRequest = { deleteOpen = false },
+            onDismissRequest = { if (!saving) { deleteOpen = false; onClearSaveError() } },
+            content = if (saveError == null) null else { { Text(saveError, color = MaterialTheme.colorScheme.error) } },
             actions = {
-                AppDialogButton(stringResource(R.string.details_cancel), { deleteOpen = false }, Modifier.testTag("delete-cancel"))
-                AppDialogButton(stringResource(R.string.details_delete), onDelete, Modifier.testTag("confirm-delete"), destructive = true)
+                AppDialogButton(stringResource(R.string.details_cancel), { deleteOpen = false; onClearSaveError() }, Modifier.testTag("delete-cancel"), enabled = !saving)
+                AppDialogButton(stringResource(R.string.details_delete), onDelete, Modifier.testTag("confirm-delete"), destructive = true, enabled = !saving)
             },
         )
     }
     if (notesOpen) {
-        NotesEditor(restaurant.notes, onDismiss = { notesOpen = false }, onSave = {
-            onUpdate(restaurant.copy(notes = it)); notesOpen = false
-        })
+        NotesEditor(restaurant.notes, onDismiss = { if (!saving) { notesOpen = false; onClearSaveError() } }, onSave = {
+            if (saveRevision != null) pendingRevision = saveRevision
+            onUpdate(restaurant.copy(notes = it))
+            if (saveRevision == null) notesOpen = false
+        }, saving = saving, saveError = saveError)
     }
     val viewerPhotos = if (viewingCover) restaurantCoverGallery(restaurant) else photos
     if (photoOpen && viewerPhotos.isNotEmpty()) {
         RestaurantPhotoViewer(restaurant.name, viewerPhotos, photoIndex, onClose = { photoOpen = false })
     }
     if (addPhotoOpen) {
-        VisitPhotoPicker(onDismiss = { addPhotoOpen = false }, onSave = { uri, caption ->
+        VisitPhotoPicker(onDismiss = { if (!saving) { addPhotoOpen = false; onClearSaveError() } }, onSave = { uri, caption ->
+            if (saveRevision != null) pendingRevision = saveRevision
             onUpdate(restaurant.withVisitPhoto(uri, caption))
-            addPhotoOpen = false
-        })
+            if (saveRevision == null) addPhotoOpen = false
+        }, saving = saving, saveError = saveError)
     }
 }
 
@@ -307,7 +321,7 @@ private fun ContactColumn(label: String, value: String, icon: Int, modifier: Mod
 }
 
 @Composable
-private fun NotesEditor(notes: String, onDismiss: () -> Unit, onSave: (String) -> Unit) {
+private fun NotesEditor(notes: String, onDismiss: () -> Unit, onSave: (String) -> Unit, saving: Boolean = false, saveError: String? = null) {
     var draft by rememberSaveable { mutableStateOf(notes) }
     AppDialog(
         title = stringResource(R.string.details_edit_notes),
@@ -317,10 +331,11 @@ private fun NotesEditor(notes: String, onDismiss: () -> Unit, onSave: (String) -
             DialogTextField(draft, { draft = it }, stringResource(R.string.details_visit_notes),
                 stringResource(R.string.details_notes_hint), Modifier.testTag("visit-notes-input"),
                 singleLine = false, minHeight = 76.dp)
+            if (saveError != null) Text(saveError, color = MaterialTheme.colorScheme.error, modifier = Modifier.testTag("notes-save-error"))
         },
         actions = {
-            AppDialogButton(stringResource(R.string.details_cancel), onDismiss, Modifier.testTag("notes-cancel"))
-            AppDialogButton(stringResource(R.string.destination_save), { onSave(draft.trim()) }, Modifier.testTag("notes-save"))
+            AppDialogButton(stringResource(R.string.details_cancel), onDismiss, Modifier.testTag("notes-cancel"), enabled = !saving)
+            AppDialogButton(stringResource(R.string.destination_save), { onSave(draft.trim()) }, Modifier.testTag("notes-save"), enabled = !saving)
         },
     )
 }

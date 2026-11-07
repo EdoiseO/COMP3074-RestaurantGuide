@@ -42,7 +42,7 @@ class RestaurantDetailsFlowTest {
 
     @Test fun notesSaveCancelAndSelectedRecordSurviveRestoration() {
         val restoration = StateRestorationTester(compose)
-        restoration.setContent { RestaurantGuideTheme { RestaurantListFlow() } }
+        restoration.setContent { RestaurantGuideTheme { TestRestaurantListFlow() } }
         openRestaurant(1)
         snapshot("two-brothers-details-top")
         compose.onNodeWithTag("details-tag-Shawarma").assert(
@@ -68,7 +68,7 @@ class RestaurantDetailsFlowTest {
     }
 
     @Test fun deleteCancelThenConfirmRemovesOnlySelectedRecord() {
-        compose.setContent { RestaurantGuideTheme { RestaurantListFlow() } }
+        compose.setContent { RestaurantGuideTheme { TestRestaurantListFlow() } }
         openRestaurant(3)
         compose.onNodeWithTag("details-delete").performClick()
         snapshot("delete-confirmation")
@@ -84,7 +84,7 @@ class RestaurantDetailsFlowTest {
     }
 
     @Test fun editCancelAndSaveUpdateTheSameRestaurant() {
-        compose.setContent { RestaurantGuideTheme { RestaurantListFlow() } }
+        compose.setContent { RestaurantGuideTheme { TestRestaurantListFlow() } }
         openRestaurant(2)
         compose.onNodeWithTag("details-edit").performClick()
         compose.onNodeWithTag("edit-name").assertTextContains("Midyeci Riza")
@@ -102,7 +102,7 @@ class RestaurantDetailsFlowTest {
     }
 
     @Test fun photoGallerySwipesAndClosesBackToDetails() {
-        compose.setContent { RestaurantGuideTheme { RestaurantListFlow() } }
+        compose.setContent { RestaurantGuideTheme { TestRestaurantListFlow() } }
         openRestaurant(1)
         compose.onNodeWithTag("details-photo-0").performScrollTo().performClick()
         compose.onNodeWithTag("restaurant_photo_viewer").assertIsDisplayed()
@@ -129,7 +129,7 @@ class RestaurantDetailsFlowTest {
         val noShare = MissingShareContext(compose.activity)
         compose.setContent {
             CompositionLocalProvider(LocalContext provides noShare) {
-                RestaurantGuideTheme { RestaurantListFlow() }
+                RestaurantGuideTheme { TestRestaurantListFlow() }
             }
         }
         compose.onNodeWithTag("restaurant-search").performTextInput("Unica")
@@ -158,7 +158,7 @@ class RestaurantDetailsFlowTest {
                 photoCaptions = listOf("Stuffed mussels — get these again."),
             ) else it
         }
-        restoration.setContent { RestaurantGuideTheme { RestaurantListFlow(records) } }
+        restoration.setContent { RestaurantGuideTheme { TestRestaurantListFlow(records) } }
         openRestaurant(2)
         compose.onNodeWithTag("details-photo-1").performScrollTo().performClick()
         compose.onNodeWithText("2 / 2 · My photos").assertIsDisplayed()
@@ -170,7 +170,7 @@ class RestaurantDetailsFlowTest {
     }
 
     @Test fun fixedActionsStayReachableAndNotesClearTheDock() {
-        compose.setContent { RestaurantGuideTheme { RestaurantListFlow() } }
+        compose.setContent { RestaurantGuideTheme { TestRestaurantListFlow() } }
         openRestaurant(1)
         val editBounds = compose.onNodeWithTag("details-edit").fetchSemanticsNode().boundsInRoot
         val dockBounds = compose.onNodeWithTag("details-action-dock").fetchSemanticsNode().boundsInRoot

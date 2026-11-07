@@ -307,7 +307,7 @@ private fun RestaurantListPreview() {
 
 @Preview(showBackground = true)
 @Composable
-private fun EmptyRestaurantListPreview() { RestaurantGuideTheme { RestaurantListFlow(emptyList()) } }
+private fun EmptyRestaurantListPreview() { RestaurantGuideTheme { RestaurantListScreen(emptyList(), "", emptySet(), {}, {}, {}, {}, {}, {}, {}, rememberLazyListState(), rememberLazyListState()) } }
 
 @Preview(name = "No search results", showBackground = true, widthDp = 412, heightDp = 940)
 @Composable

@@ -23,7 +23,7 @@ class RedesignScreenLayoutTest {
             val density = LocalDensity.current.density
             CompositionLocalProvider(LocalDensity provides Density(density, fontScale = 2f)) {
                 RestaurantGuideTheme {
-                    Box(Modifier.size(320.dp, 640.dp)) { RestaurantListFlow() }
+                    Box(Modifier.size(320.dp, 640.dp)) { TestRestaurantListFlow() }
                 }
             }
         }
@@ -43,7 +43,7 @@ class RedesignScreenLayoutTest {
             val density = LocalDensity.current.density
             CompositionLocalProvider(LocalDensity provides Density(density, fontScale = 2f)) {
                 RestaurantGuideTheme {
-                    Box(Modifier.size(320.dp, 640.dp)) { RestaurantListFlow() }
+                    Box(Modifier.size(320.dp, 640.dp)) { TestRestaurantListFlow() }
                 }
             }
         }

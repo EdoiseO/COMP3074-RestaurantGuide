@@ -21,7 +21,7 @@ class RestaurantFormFlowTest {
 
     @Test fun completeAddAndEditRetainHalfStarsAndAllFields() {
         val restoration = StateRestorationTester(compose)
-        restoration.setContent { RestaurantGuideTheme { RestaurantListFlow(emptyList()) } }
+        restoration.setContent { RestaurantGuideTheme { TestRestaurantListFlow(emptyList()) } }
         compose.onNodeWithTag("add-restaurant").performClick()
         snapshot("add-form-top")
         compose.onNodeWithTag("add-save").performClick()
