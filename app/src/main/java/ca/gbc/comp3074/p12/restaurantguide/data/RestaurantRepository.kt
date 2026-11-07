@@ -3,19 +3,18 @@ package ca.gbc.comp3074.p12.restaurantguide.data
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
 
-class RestaurantRepository(private val restaurantDao: RestaurantDao) {
-    val allRestaurants: Flow<List<Restaurant>> = restaurantDao.getAllRestaurants()
+class RestaurantRepository(private val restaurantDao: RestaurantDao) : RestaurantStore {
+    override val allRestaurants: Flow<List<Restaurant>> = restaurantDao.getAllRestaurants()
         .map { entities -> entities.map { it.toDomain() } }
 
-    suspend fun insert(restaurant: Restaurant) {
-        restaurantDao.insertRestaurant(restaurant.toEntity())
+    override suspend fun insert(restaurant: Restaurant): Int =
+        restaurantDao.insertRestaurant(restaurant.copy(id = 0).toEntity()).toInt()
+
+    override suspend fun update(restaurant: Restaurant) {
+        if (restaurantDao.updateRestaurant(restaurant.toEntity()) == 0) throw RestaurantMissingException()
     }
 
-    suspend fun update(restaurant: Restaurant) {
-        restaurantDao.updateRestaurant(restaurant.toEntity())
-    }
-
-    suspend fun delete(restaurant: Restaurant) {
-        restaurantDao.deleteRestaurant(restaurant.toEntity())
+    override suspend fun delete(restaurant: Restaurant) {
+        if (restaurantDao.deleteRestaurant(restaurant.toEntity()) == 0) throw RestaurantMissingException()
     }
 }
