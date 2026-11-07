@@ -2,6 +2,9 @@
 <resources>
     <string name="visit_photo_reselect">This photo could not be opened. Choose another photo.</string>
     <string name="visit_photo_picker_unavailable">The photo picker could not be opened. Try again.</string>
+    <string name="visit_photo_access_failed">This photo could not be kept for later. Try again or choose another photo.</string>
+    <string name="form_photo_access_title">Could not save photo access</string>
+    <string name="form_photo_access_failed">One or more photos could not be kept for later. Reselect or remove those photos, then try saving again.</string>
     <string name="visit_photo_body">Remember your meal, drink or visit.</string>
     <string name="visit_photo_choose">Choose photo</string>
     <string name="visit_photo_caption_hint">Add a short memory…</string>

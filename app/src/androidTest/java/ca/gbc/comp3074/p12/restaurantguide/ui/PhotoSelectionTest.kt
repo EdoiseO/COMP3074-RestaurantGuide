@@ -3,12 +3,14 @@ package ca.gbc.comp3074.p12.restaurantguide.ui
 import android.accessibilityservice.AccessibilityService
 import android.app.UiAutomation
 import android.content.ContentValues
+import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.Color
 import android.graphics.Rect
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.Process
 import android.os.SystemClock
 import android.provider.MediaStore
 import android.view.InputDevice
@@ -31,6 +33,7 @@ import androidx.compose.ui.test.junit4.StateRestorationTester
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onAllNodesWithText
+import androidx.compose.ui.test.onNodeWithContentDescription
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
@@ -45,7 +48,7 @@ import ca.gbc.comp3074.p12.restaurantguide.R
 import ca.gbc.comp3074.p12.restaurantguide.data.Restaurant
 import ca.gbc.comp3074.p12.restaurantguide.ui.theme.RestaurantGuideTheme
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertTrue
 import org.junit.Assume.assumeTrue
 import org.junit.Rule
@@ -105,6 +108,59 @@ class PhotoSelectionTest {
         compose.runOnIdle { assertEquals(false, saved) }
     }
 
+    @Test fun readablePhotoWithoutAPersistableGrantShowsErrorAndKeepsDraft() = withImageFixture { uri, _ ->
+        var saved = false
+        compose.setContent {
+            RestaurantGuideTheme {
+                VisitPhotoPicker(
+                    initialUri = uri.toString(), initialCaption = "Unsaved caption",
+                    onDismiss = {}, onSave = { _, _ -> saved = true },
+                )
+            }
+        }
+        awaitSaveReady()
+        compose.onNodeWithTag("visit-photo-save").performClick()
+        compose.waitUntil(10_000) {
+            compose.onAllNodesWithTag("visit-photo-access-error").fetchSemanticsNodes().isNotEmpty()
+        }
+        compose.onNodeWithTag("visit-photo-choose").assertIsEnabled()
+        compose.onNodeWithTag("visit-photo-caption").assertTextEquals("Unsaved caption")
+        compose.runOnIdle { assertEquals(false, saved) }
+    }
+
+    @Test fun cancelledPickerAndFormLeaveTheSavedAlbumAndGrantsAlone() = withImageFixture { _, displayName ->
+        val resolver = compose.activity.contentResolver
+        val originalGrants = resolver.persistedUriPermissions.map { it.uri }.toSet()
+        val seed = Restaurant(
+            id = 41, name = "Fixture restaurant", description = "", address = "", phone = "",
+            tags = emptyList(), rating = 4.5f, galleryRes = listOf(R.drawable.two_brothers_chicken),
+        )
+        compose.setContent {
+            RestaurantGuideTheme { RestaurantListFlow(listOf(seed)) }
+        }
+        compose.onNodeWithTag("restaurant-card-41").performClick()
+        compose.onNodeWithTag("details-edit").performClick()
+        compose.onNodeWithTag("edit-add-photo").performScrollTo().performClick()
+        compose.onNodeWithTag("visit-photo-choose").performClick()
+        val automation = InstrumentationRegistry.getInstrumentation().uiAutomation
+        compose.waitUntil(10_000) {
+            val activePackage = automation.rootInActiveWindow?.packageName?.toString()
+            activePackage != null && activePackage != compose.activity.packageName
+        }
+        automation.performGlobalAction(AccessibilityService.GLOBAL_ACTION_BACK)
+        compose.onNodeWithTag("visit-photo-save").assertIsNotEnabled()
+        compose.onNodeWithTag("visit-photo-choose").performClick()
+        selectFixtureInSystemPicker(displayName)
+        awaitSaveReady()
+        compose.onNodeWithTag("visit-photo-save").performClick()
+        compose.onNodeWithTag("edit-uri-photo-0").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithTag("edit-cancel").performClick()
+        compose.onNodeWithTag("details-edit").performClick()
+        compose.onNodeWithTag("edit-resource-photo-0").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithTag("edit-uri-photo-0").assertDoesNotExist()
+        assertEquals(originalGrants, resolver.persistedUriPermissions.map { it.uri }.toSet())
+    }
+
     @Test fun longCaptionCanBeScrolledAndReadWithoutEllipsis() {
         val caption = (1..60).joinToString("\n") { "Dish $it: extra pickles; order this again." }
         compose.setContent {
@@ -124,7 +180,15 @@ class PhotoSelectionTest {
         compose.onNodeWithText("Use arrows or choose a photo").assertIsDisplayed()
     }
 
-    @Test fun realSystemPickerReselectsPhotoThenSaveAndRestorationKeepCaption() = withImageFixture { fixtureUri, displayName ->
+    @Test fun realSystemPickerReselectsPhotoThenSaveAndRestorationKeepCaption() {
+        val stageReload = InstrumentationRegistry.getArguments().getString("stagePhotoReload") == "true"
+        if (stageReload) reloadProofFile().delete()
+        withImageFixture(keepAfterSuccess = stageReload) { fixtureUri, displayName ->
+            saveAndRestoreRealPickerPhoto(fixtureUri, displayName, stageReload)
+        }
+    }
+
+    private fun saveAndRestoreRealPickerPhoto(fixtureUri: Uri, displayName: String, stageReload: Boolean) {
         val restoration = StateRestorationTester(compose)
         var returnedUri: String? = null
         restoration.setContent {
@@ -151,28 +215,78 @@ class PhotoSelectionTest {
         compose.onNodeWithTag("visit-photo-error").assertDoesNotExist()
         compose.onNodeWithTag("visit-photo-caption").performTextInput("A real picker photo — keep this.")
         compose.onNodeWithTag("visit-photo-save").performClick()
-        compose.onNodeWithText("A real picker photo — keep this.").assertIsDisplayed()
-        assertNotNull(returnedUri)
         val resolver = compose.activity.contentResolver
-        // The system picker can wrap/rename a MediaStore item (for example 46.png).
-        // Prove image identity using the unmodified bytes, rather than its display name.
-        val sourceBytes = resolver.openInputStream(fixtureUri)!!.use { it.readBytes() }
-        val returnedBytes = resolver.openInputStream(Uri.parse(returnedUri))!!.use { it.readBytes() }
-        val sourceHash = sha256(sourceBytes)
-        val returnedHash = sha256(returnedBytes)
-        val proof = JSONObject().put("sourceUri", fixtureUri.toString()).put("returnedUri", returnedUri)
-            .put("sourceBytes", sourceBytes.size).put("returnedBytes", returnedBytes.size)
-            .put("sourceSha256", sourceHash).put("returnedSha256", returnedHash)
-        InstrumentationRegistry.getInstrumentation().targetContext.filesDir.resolve("list-test-screens")
-            .apply { mkdirs() }.resolve("photo-picker-byte-proof.json").writeText(proof.toString(2))
-        assertEquals("The external picker must return the fixture image's bytes", sourceBytes.size, returnedBytes.size)
-        assertEquals("The external picker must return the fixture image's SHA-256", sourceHash, returnedHash)
-        restoration.emulateSavedInstanceStateRestore()
+        try {
+            compose.waitUntil(10_000) { compose.runOnIdle { returnedUri != null } }
+            val selectedUri = Uri.parse(returnedUri)
+            assertTrue(resolver.persistedUriPermissions.any { it.uri == selectedUri && it.isReadPermission })
+            // The picker may wrap the source in a different URI. Compare the unmodified bytes.
+            val sourceBytes = resolver.openInputStream(fixtureUri)!!.use { it.readBytes() }
+            val returnedBytes = resolver.openInputStream(selectedUri)!!.use { it.readBytes() }
+            val sourceHash = sha256(sourceBytes)
+            assertEquals(sourceBytes.size, returnedBytes.size)
+            assertEquals(sourceHash, sha256(returnedBytes))
+            restoration.emulateSavedInstanceStateRestore()
+            assertPhotoDecoded()
+            snapshot("photo-picker-success-gallery")
+            if (stageReload) {
+                val proof = JSONObject().put("sourceUri", fixtureUri.toString()).put("returnedUri", returnedUri)
+                    .put("sourceBytes", sourceBytes.size).put("sourceSha256", sourceHash)
+                    .put("pickerPid", Process.myPid())
+                reloadProofFile().writeText(proof.toString())
+            }
+        } finally {
+            if (!stageReload || !reloadProofFile().isFile) {
+                returnedUri?.let { resolver.releasePersistableUriPermission(Uri.parse(it), Intent.FLAG_GRANT_READ_URI_PERMISSION) }
+            }
+        }
+    }
+
+    // Run the real-picker test with stagePhotoReload=true, adb shell am force-stop the app,
+    // then run this method with verifyPhotoReload=true. Separate instrumentation runs are
+    // required because force-stop terminates the target process and its running tests.
+    @Test fun verifyRealPickerPhotoAfterForceStop() {
+        assumeTrue(InstrumentationRegistry.getArguments().getString("verifyPhotoReload") == "true")
+        val proofFile = reloadProofFile()
+        val proof = JSONObject(proofFile.readText())
+        val resolver = compose.activity.contentResolver
+        val selectedUri = Uri.parse(proof.getString("returnedUri"))
+        try {
+            assertNotEquals(proof.getInt("pickerPid"), Process.myPid())
+            assertTrue(resolver.persistedUriPermissions.any { it.uri == selectedUri && it.isReadPermission })
+            val reloadedBytes = resolver.openInputStream(selectedUri)!!.use { it.readBytes() }
+            assertEquals(proof.getInt("sourceBytes"), reloadedBytes.size)
+            assertEquals(proof.getString("sourceSha256"), sha256(reloadedBytes))
+            compose.setContent {
+                RestaurantGuideTheme {
+                    RestaurantPhotoViewer(
+                        "Picker fixture",
+                        listOf(RestaurantPhoto(uri = selectedUri.toString(), caption = "A real picker photo — keep this.")),
+                        0, {},
+                    )
+                }
+            }
+            assertPhotoDecoded()
+        } finally {
+            if (resolver.persistedUriPermissions.any { it.uri == selectedUri && it.isReadPermission }) {
+                resolver.releasePersistableUriPermission(selectedUri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
+            }
+            resolver.delete(Uri.parse(proof.getString("sourceUri")), null, null)
+            proofFile.delete()
+        }
+    }
+
+    private fun reloadProofFile() =
+        InstrumentationRegistry.getInstrumentation().targetContext.filesDir.resolve("photo-reload-fixture.json")
+
+    private fun assertPhotoDecoded() {
         compose.onNodeWithText("A real picker photo — keep this.").assertIsDisplayed()
         compose.onNodeWithText("1 / 1 · My photos").assertIsDisplayed()
-        compose.waitUntil(10_000) { compose.onAllNodesWithText("Loading photo").fetchSemanticsNodes().isEmpty() }
+        compose.waitUntil(10_000) {
+            compose.onAllNodesWithText("Loading photo").fetchSemanticsNodes().isEmpty()
+        }
         compose.onNodeWithText("Photo unavailable").assertDoesNotExist()
-        snapshot("photo-picker-success-gallery")
+        compose.onNodeWithContentDescription(compose.activity.getString(R.string.photo_zoom_in)).assertIsEnabled()
     }
 
     private fun awaitSaveReady() {
@@ -182,7 +296,7 @@ class PhotoSelectionTest {
         compose.onNodeWithTag("visit-photo-save").assertIsEnabled()
     }
 
-    private fun withImageFixture(block: (Uri, String) -> Unit) {
+    private fun withImageFixture(keepAfterSuccess: Boolean = false, block: (Uri, String) -> Unit) {
         assumeTrue("The scoped MediaStore fixture requires API 29+", Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q)
         val resolver = InstrumentationRegistry.getInstrumentation().targetContext.contentResolver
         val name = "restaurant-guide-picker-${UUID.randomUUID()}.png"
@@ -194,14 +308,20 @@ class PhotoSelectionTest {
             put(MediaStore.Images.Media.IS_PENDING, 1)
         }
         val uri = resolver.insert(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, values)!!
+        var completed = false
         try {
-            val bitmap = Bitmap.createBitmap(40, 30, Bitmap.Config.ARGB_8888).apply { eraseColor(Color.CYAN) }
+            val hash = name.hashCode()
+            val fixtureColor = Color.rgb((hash ushr 16) and 255, (hash ushr 8) and 255, hash and 255)
+            val bitmap = Bitmap.createBitmap(40, 30, Bitmap.Config.ARGB_8888).apply { eraseColor(fixtureColor) }
             try {
                 resolver.openOutputStream(uri)!!.use { assertTrue(bitmap.compress(Bitmap.CompressFormat.PNG, 100, it)) }
             } finally { bitmap.recycle() }
             resolver.update(uri, ContentValues().apply { put(MediaStore.Images.Media.IS_PENDING, 0) }, null, null)
             block(uri, name)
-        } finally { resolver.delete(uri, null, null) }
+            completed = true
+        } finally {
+            if (!keepAfterSuccess || !completed) resolver.delete(uri, null, null)
+        }
     }
 
     /**
