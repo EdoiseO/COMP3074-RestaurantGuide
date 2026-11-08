@@ -18,8 +18,8 @@ interface RestaurantDao {
     @Query("SELECT * FROM restaurants ORDER BY id DESC")
     fun getAllRestaurants(): Flow<List<RestaurantEntity>>
 
-    // Inserts a new record or replaces on conflict
-    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    // Inserts a new record; conflicts fail instead of overwriting another restaurant
+    @Insert(onConflict = OnConflictStrategy.ABORT)
     suspend fun insertRestaurant(restaurant: RestaurantEntity): Long
 
     // Updates an existing record

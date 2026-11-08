@@ -43,11 +43,14 @@ dependencies {
     androidTestImplementation("androidx.test.espresso:espresso-core:3.7.0")
     debugImplementation("androidx.compose.ui:ui-test-manifest")
 
-    // Room Database dependencies using KSP
+    // Room schema is checked in for migration review.
     implementation("androidx.room:room-runtime:2.8.5")
     implementation("androidx.room:room-ktx:2.8.5")
     ksp("androidx.room:room-compiler:2.8.5")
 
     implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7")
+}
 
+ksp {
+    arg("room.schemaLocation", "$projectDir/schemas")
 }
