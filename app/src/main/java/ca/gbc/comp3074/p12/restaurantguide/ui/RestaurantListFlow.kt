@@ -1,9 +1,18 @@
 package ca.gbc.comp3074.p12.restaurantguide.ui
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -11,32 +20,33 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.runtime.withFrameNanos
-import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.ui.Modifier
-import androidx.compose.foundation.layout.*
-import androidx.compose.material3.*
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import ca.gbc.comp3074.p12.restaurantguide.R
-import androidx.compose.ui.platform.LocalFocusManager
-import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
+import ca.gbc.comp3074.p12.restaurantguide.R
+import ca.gbc.comp3074.p12.restaurantguide.data.AppDatabase
 import ca.gbc.comp3074.p12.restaurantguide.data.Restaurant
+import ca.gbc.comp3074.p12.restaurantguide.data.RestaurantRepository
 import kotlinx.coroutines.launch
 
 private val TagsSaver = listSaver<List<String>, String>(save = { it }, restore = { it })
 
 @Composable
 fun RestaurantListFlow() {
-    val context = androidx.compose.ui.platform.LocalContext.current.applicationContext
-    val owner: RestaurantViewModel = viewModel(factory = androidx.lifecycle.viewmodel.viewModelFactory {
-        initializer { RestaurantViewModel(ca.gbc.comp3074.p12.restaurantguide.data.RestaurantRepository(
-            ca.gbc.comp3074.p12.restaurantguide.data.AppDatabase.getDatabase(context).restaurantDao())) }
+    val context = LocalContext.current.applicationContext
+    val owner: RestaurantViewModel = viewModel(factory = viewModelFactory {
+        initializer { RestaurantViewModel(RestaurantRepository(
+            AppDatabase.getDatabase(context).restaurantDao())) }
     })
     RestaurantListFlow(owner)
 }
