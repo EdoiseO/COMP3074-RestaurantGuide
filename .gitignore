@@ -4,6 +4,8 @@
 .idea/
 **/build/
 local.properties
+# Keep local Gradle JVM selections out of teammates' builds.
+/gradle/gradle-daemon-jvm.properties
 *.iml
 .DS_Store
 captures/
