@@ -24,9 +24,9 @@ interface RestaurantDao {
 
     // Updates an existing record
     @Update
-    suspend fun updateRestaurant(restaurant: RestaurantEntity)
+    suspend fun updateRestaurant(restaurant: RestaurantEntity): Int
 
     // Deletes a selected record
     @Delete
-    suspend fun deleteRestaurant(restaurant: RestaurantEntity)
+    suspend fun deleteRestaurant(restaurant: RestaurantEntity): Int
 }

@@ -1,9 +1,18 @@
 package ca.gbc.comp3074.p12.restaurantguide.ui
 
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.safeDrawingPadding
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
@@ -11,27 +20,45 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.listSaver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.withFrameNanos
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import ca.gbc.comp3074.p12.restaurantguide.data.DemoRestaurants
+import androidx.lifecycle.viewmodel.initializer
+import androidx.lifecycle.viewmodel.viewModelFactory
+import ca.gbc.comp3074.p12.restaurantguide.R
+import ca.gbc.comp3074.p12.restaurantguide.data.AppDatabase
 import ca.gbc.comp3074.p12.restaurantguide.data.Restaurant
+import ca.gbc.comp3074.p12.restaurantguide.data.RestaurantRepository
 import kotlinx.coroutines.launch
 
 private val TagsSaver = listSaver<List<String>, String>(save = { it }, restore = { it })
 
 @Composable
-fun RestaurantListFlow(
-    initialRestaurants: List<Restaurant> = DemoRestaurants.restaurants,
-    viewModel: RestaurantViewModel = viewModel()
-) {
-    // Collect persistent restaurants from Room database via ViewModel
-    val restaurants by viewModel.restaurants.collectAsState()
+fun RestaurantListFlow() {
+    val context = LocalContext.current.applicationContext
+    val owner: RestaurantViewModel = viewModel(factory = viewModelFactory {
+        initializer { RestaurantViewModel(RestaurantRepository(
+            AppDatabase.getDatabase(context).restaurantDao())) }
+    })
+    RestaurantListFlow(owner)
+}
 
+@Composable
+fun RestaurantListFlow(viewModel: RestaurantViewModel) {
+    val state by viewModel.state.collectAsStateWithLifecycle()
+    val restaurants = state.restaurants
     var query by rememberSaveable { mutableStateOf("") }
     var selectedTags by rememberSaveable(stateSaver = TagsSaver) { mutableStateOf(emptyList<String>()) }
     var route by rememberSaveable { mutableStateOf("list") }
+    var pendingScrollId by rememberSaveable { mutableStateOf<Int?>(null) }
     var selectedId by rememberSaveable { mutableIntStateOf(0) }
     val listState = rememberLazyListState()
     val filtersState = rememberLazyListState()
@@ -42,36 +69,80 @@ fun RestaurantListFlow(
     val navigate: (String) -> Unit = { destination ->
         focusManager.clearFocus()
         keyboard?.hide()
+        viewModel.dismissWriteError()
         route = destination
     }
     val selectedRestaurant = restaurants.firstOrNull { it.id == selectedId }
 
-    // Delegate updates directly to the Room database ViewModel
-    val updateRestaurant: (Restaurant) -> Unit = { changed ->
-        viewModel.updateRestaurant(changed)
+    val write: (RestaurantWrite, Restaurant) -> Unit = { kind, record ->
+        focusManager.clearFocus()
+        keyboard?.hide()
+        viewModel.write(kind, record)
     }
-
+    LaunchedEffect(state.completed) {
+        when (state.completed) {
+            RestaurantWrite.ADD -> {
+                pendingScrollId = state.createdId
+                query = ""; selectedTags = emptyList(); navigate("list")
+            }
+            RestaurantWrite.EDIT -> navigate("details")
+            RestaurantWrite.DELETE -> navigate("list")
+            else -> Unit
+        }
+        if (state.completed != null) viewModel.acknowledgeWrite()
+    }
+    LaunchedEffect(route, pendingScrollId, restaurants, query, selectedTags) {
+        val id = pendingScrollId
+        val index = restaurants.indexOfFirst { it.id == id }
+        if (route == "list" && id != null && index >= 0 && query.isEmpty() && selectedTags.isEmpty()) {
+            // A successful insert may precede Room's next emission. Wait for that record, then
+            // let LazyColumn consume the new data before scrolling (also works from an empty list).
+            withFrameNanos { }
+            listState.scrollToItem(index)
+            pendingScrollId = null
+        }
+    }
     BackHandler(enabled = route != "list") {
-        navigate(if (route in listOf("edit", "map", "email", "share")) "details" else "list")
+        if (!state.saving) navigate(if (route in listOf("edit", "map", "email", "share")) "details" else "list")
     }
-    when (route) {
+    val error = when (state.writeError) {
+        RestaurantWriteError.FAILED -> stringResource(R.string.storage_write_failed)
+        RestaurantWriteError.MISSING -> stringResource(R.string.storage_record_missing)
+        null -> null
+    }
+    if (!state.hasLoaded && (state.loading || state.loadFailed)) {
+        StorageStatus(loading = state.loading, onRetry = viewModel::reload)
+        return
+    }
+    val missingRecord = route in listOf("details", "edit", "map", "email", "share") && selectedRestaurant == null
+    when {
+        missingRecord -> {
+            if (state.saving || state.completed != null) StorageStatus(loading = true, onRetry = {})
+            else Column(Modifier.fillMaxSize().safeDrawingPadding().padding(20.dp), verticalArrangement = Arrangement.Center) {
+                Text(stringResource(R.string.storage_record_missing))
+                TextButton(onClick = { navigate("list") }, modifier = Modifier.testTag("missing-record-back")) {
+                    Text(stringResource(R.string.destination_back))
+                }
+            }
+        }
+        else -> when (route) {
         "details" -> selectedRestaurant?.let {
             RestaurantDetailsScreen(
                 it, detailsScrollState, onBack = { navigate("list") },
                 onEdit = { navigate("edit") },
                 onDelete = {
-                    viewModel.deleteRestaurant(it) // Permanently delete from Room database
-                    navigate("list")
+                    write(RestaurantWrite.DELETE, it)
                 },
-                onUpdate = updateRestaurant,
+                onUpdate = { changed -> write(RestaurantWrite.DETAILS, changed) },
+                saving = state.saving, saveError = error, saveRevision = state.revision,
+                onClearSaveError = viewModel::dismissWriteError,
                 onMap = { navigate("map") }, onShare = { navigate("share") },
             )
         }
         "edit" -> selectedRestaurant?.let {
             RestaurantEditEntry(it, onBack = { navigate("details") }, onSave = { changed ->
-                updateRestaurant(changed)
-                navigate("details")
-            })
+                write(RestaurantWrite.EDIT, changed)
+            }, saving = state.saving, saveError = error)
         }
         "map" -> selectedRestaurant?.let {
             RestaurantMapEntry(it, onBack = { navigate("details") })
@@ -82,14 +153,9 @@ fun RestaurantListFlow(
         "add" -> AddRestaurantEntry(
             onBack = { navigate("list") },
             onSave = { draft ->
-                // id = 0 lets Room auto-generate the primary key uniquely
-                val created = draft.copy(id = 0)
-                viewModel.addRestaurant(created) // Persist new restaurant into Room database
-                query = ""
-                selectedTags = emptyList()
-                navigate("list")
-                scope.launch { listState.scrollToItem(0) }
+                write(RestaurantWrite.ADD, draft)
             },
+            saving = state.saving, saveError = error,
         )
         "about" -> AboutEntry(onBack = { navigate("list") })
         else -> RestaurantListScreen(
@@ -113,5 +179,35 @@ fun RestaurantListFlow(
             listState = listState,
             filtersState = filtersState,
         )
+    }
+    }
+    // Keep route/form/dialog compositions alive while a read retries, preserving unsaved input.
+    if (state.loadFailed || state.loading) AppDialog(
+        title = stringResource(if (state.loading) R.string.storage_loading else R.string.storage_load_failed),
+        onDismissRequest = {},
+        content = if (state.loading) ({ CircularProgressIndicator() }) else null,
+        actions = {
+            if (state.loadFailed) AppDialogButton(stringResource(R.string.storage_retry), viewModel::reload,
+                Modifier.testTag("storage-retry"))
+        },
+    )
+    // Prevent additional edits or Back while the captured draft is being committed.
+    // A separate window also blocks input to a Notes/Photo dialog that is already open.
+    if (state.saving) AppDialog(
+        title = stringResource(R.string.storage_saving),
+        onDismissRequest = {},
+        content = { CircularProgressIndicator(Modifier.testTag("storage-saving")) },
+        actions = {},
+    )
+}
+@Composable
+private fun StorageStatus(loading: Boolean, onRetry: () -> Unit) {
+    Column(Modifier.fillMaxSize().safeDrawingPadding().padding(20.dp).testTag("storage-status"),
+        verticalArrangement = Arrangement.Center, horizontalAlignment = Alignment.CenterHorizontally) {
+        if (loading) CircularProgressIndicator()
+        Text(stringResource(if (loading) R.string.storage_loading else R.string.storage_load_failed))
+        if (!loading) TextButton(onClick = onRetry, modifier = Modifier.testTag("storage-retry")) {
+            Text(stringResource(R.string.storage_retry))
+        }
     }
 }

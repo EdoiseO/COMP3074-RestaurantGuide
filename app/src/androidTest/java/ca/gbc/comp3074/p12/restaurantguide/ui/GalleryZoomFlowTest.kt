@@ -210,7 +210,7 @@ class GalleryZoomFlowTest {
     }
 
     @Test fun closeAndHardwareBackReturnToTheSameDetailsWhileZoomed() {
-        compose.setContent { RestaurantGuideTheme { RestaurantListFlow() } }
+        compose.setContent { RestaurantGuideTheme { TestRestaurantListFlow() } }
         compose.onNodeWithTag("restaurant-list").performScrollToNode(hasTestTag("restaurant-card-1"))
         compose.onNodeWithTag("restaurant-card-1").performClick()
         compose.onNodeWithTag("details-photo-0").performScrollTo().performClick()

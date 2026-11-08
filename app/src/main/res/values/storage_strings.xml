@@ -1,0 +1,8 @@
+<resources>
+    <string name="storage_loading">Loading restaurants…</string>
+    <string name="storage_load_failed">Could not load your restaurants. Try again.</string>
+    <string name="storage_retry">Retry</string>
+    <string name="storage_saving">Saving…</string>
+    <string name="storage_write_failed">Changes were not saved. Your draft is still here. Please try again.</string>
+    <string name="storage_record_missing">This restaurant is no longer available. Return to your list.</string>
+</resources>

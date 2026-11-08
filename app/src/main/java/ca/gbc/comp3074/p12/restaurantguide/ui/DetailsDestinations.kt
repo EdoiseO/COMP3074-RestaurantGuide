@@ -64,8 +64,8 @@ import java.util.Locale
 
 /** The same full form used for Add, prefilled from the selected record. */
 @Composable
-fun RestaurantEditEntry(restaurant: Restaurant, onBack: () -> Unit, onSave: (Restaurant) -> Unit) {
-    RestaurantFormEntry(restaurant, onBack, onSave)
+fun RestaurantEditEntry(restaurant: Restaurant, onBack: () -> Unit, onSave: (Restaurant) -> Unit, saving: Boolean = false, saveError: String? = null) {
+    RestaurantFormEntry(restaurant, onBack, onSave, saving = saving, saveError = saveError)
 }
 
 /** Real static images retain their attribution; fallback streets intentionally do not claim geocoding. */

@@ -31,8 +31,8 @@ import ca.gbc.comp3074.p12.restaurantguide.R
 import ca.gbc.comp3074.p12.restaurantguide.data.Restaurant
 
 @Composable
-fun AddRestaurantEntry(onBack: () -> Unit, onSave: (Restaurant) -> Unit) {
-    RestaurantFormEntry(onBack = onBack, onSave = onSave)
+fun AddRestaurantEntry(onBack: () -> Unit, onSave: (Restaurant) -> Unit, saving: Boolean = false, saveError: String? = null) {
+    RestaurantFormEntry(onBack = onBack, onSave = onSave, saving = saving, saveError = saveError)
 }
 
 /** About shares the app's compact toolbar; its information scrolls independently. */
