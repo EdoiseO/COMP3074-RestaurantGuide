@@ -18,6 +18,13 @@ import android.view.KeyEvent
 import android.view.MotionEvent
 import android.view.accessibility.AccessibilityNodeInfo
 import androidx.activity.ComponentActivity
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.flow.first
+import ca.gbc.comp3074.p12.restaurantguide.data.*
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -108,24 +115,19 @@ class PhotoSelectionTest {
         compose.runOnIdle { assertEquals(false, saved) }
     }
 
-    @Test fun readablePhotoWithoutAPersistableGrantShowsErrorAndKeepsDraft() = withImageFixture { uri, _ ->
-        var saved = false
-        compose.setContent {
-            RestaurantGuideTheme {
-                VisitPhotoPicker(
-                    initialUri = uri.toString(), initialCaption = "Unsaved caption",
-                    onDismiss = {}, onSave = { _, _ -> saved = true },
-                )
-            }
+    @Test fun readablePhotoWithoutAPersistableGrantSavesWithWarning() = withImageFixture { uri, _ ->
+        val store = FakeRestaurantStore()
+        val owner = RestaurantViewModel(store, PhotoWriteCoordinator(AndroidPhotoGrants(compose.activity.contentResolver)))
+        compose.setContent { RestaurantGuideTheme { RestaurantListFlow(owner) } }
+        val record = Restaurant(0, "Session cafe", "", "", "", emptyList(), 0f,
+            photoUris = listOf(uri.toString()), photoCaptions = listOf("Keep this caption"))
+        compose.runOnIdle { owner.write(RestaurantWrite.ADD, record) }
+        compose.waitUntil(10_000) { compose.onAllNodesWithTag("photo-session-warning").fetchSemanticsNodes().isNotEmpty() }
+        compose.onNodeWithTag("photo-session-ok").performClick()
+        compose.runOnIdle {
+            assertEquals(listOf("Keep this caption"), store.allRestaurants.value.single().photoCaptions)
+            owner.viewModelScope.cancel()
         }
-        awaitSaveReady()
-        compose.onNodeWithTag("visit-photo-save").performClick()
-        compose.waitUntil(10_000) {
-            compose.onAllNodesWithTag("visit-photo-access-error").fetchSemanticsNodes().isNotEmpty()
-        }
-        compose.onNodeWithTag("visit-photo-choose").assertIsEnabled()
-        compose.onNodeWithTag("visit-photo-caption").assertTextEquals("Unsaved caption")
-        compose.runOnIdle { assertEquals(false, saved) }
     }
 
     @Test fun cancelledPickerAndFormLeaveTheSavedAlbumAndGrantsAlone() = withImageFixture { _, displayName ->
@@ -136,7 +138,7 @@ class PhotoSelectionTest {
             tags = emptyList(), rating = 4.5f, galleryRes = listOf(R.drawable.two_brothers_chicken),
         )
         compose.setContent {
-            RestaurantGuideTheme { RestaurantListFlow(listOf(seed)) }
+            RestaurantGuideTheme { TestRestaurantListFlow(listOf(seed)) }
         }
         compose.onNodeWithTag("restaurant-card-41").performClick()
         compose.onNodeWithTag("details-edit").performClick()
@@ -148,6 +150,10 @@ class PhotoSelectionTest {
             activePackage != null && activePackage != compose.activity.packageName
         }
         automation.performGlobalAction(AccessibilityService.GLOBAL_ACTION_BACK)
+        compose.waitUntil(10_000) {
+            automation.rootInActiveWindow?.packageName?.toString() == compose.activity.packageName
+        }
+        compose.waitForIdle()
         compose.onNodeWithTag("visit-photo-save").assertIsNotEnabled()
         compose.onNodeWithTag("visit-photo-choose").performClick()
         selectFixtureInSystemPicker(displayName)
@@ -190,17 +196,35 @@ class PhotoSelectionTest {
 
     private fun saveAndRestoreRealPickerPhoto(fixtureUri: Uri, displayName: String, stageReload: Boolean) {
         val restoration = StateRestorationTester(compose)
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val databaseName = "picker-reload-${UUID.randomUUID()}"
+        val database = AppDatabase.builder(context, databaseName).build()
+        val store = RestaurantRepository(database.restaurantDao())
+        val owner = RestaurantViewModel(store, PhotoWriteCoordinator(AndroidPhotoGrants(context.contentResolver)))
         var returnedUri: String? = null
+        var savedId: Int? = null
         restoration.setContent {
             RestaurantGuideTheme {
+                val state by owner.state.collectAsState()
                 var open by rememberSaveable { mutableStateOf(true) }
                 var selected by rememberSaveable { mutableStateOf("") }
                 var caption by rememberSaveable { mutableStateOf("") }
+                LaunchedEffect(state.completed, state.restaurants) {
+                    val row = state.restaurants.firstOrNull { it.id == state.createdId }
+                    if (state.completed == RestaurantWrite.ADD && row != null) {
+                        selected = row.photoUris.single(); returnedUri = selected
+                        caption = row.photoCaptions.single(); savedId = row.id
+                        open = false; owner.acknowledgeWrite()
+                    }
+                }
                 if (open) {
                     VisitPhotoPicker(
                         initialUri = "content://unavailable-provider/reselect-test",
+                        saving = state.saving,
                         onDismiss = { open = false },
-                        onSave = { photo, text -> selected = photo; caption = text; returnedUri = photo; open = false },
+                        onSave = { photo, text -> owner.write(RestaurantWrite.ADD,
+                            Restaurant(0, "Picker fixture", "", "", "", emptyList(), 0f,
+                                photoUris = listOf(photo), photoCaptions = listOf(text))) },
                     )
                 } else if (selected.isNotEmpty()) {
                     RestaurantPhotoViewer("Picker fixture", listOf(RestaurantPhoto(uri = selected, caption = caption)), 0, {})
@@ -232,18 +256,21 @@ class PhotoSelectionTest {
             if (stageReload) {
                 val proof = JSONObject().put("sourceUri", fixtureUri.toString()).put("returnedUri", returnedUri)
                     .put("sourceBytes", sourceBytes.size).put("sourceSha256", sourceHash)
-                    .put("pickerPid", Process.myPid())
+                    .put("pickerPid", Process.myPid()).put("databaseName", databaseName).put("restaurantId", savedId)
                 reloadProofFile().writeText(proof.toString())
             }
         } finally {
+            owner.viewModelScope.cancel()
+            database.close()
             if (!stageReload || !reloadProofFile().isFile) {
+                context.deleteDatabase(databaseName)
                 returnedUri?.let { resolver.releasePersistableUriPermission(Uri.parse(it), Intent.FLAG_GRANT_READ_URI_PERMISSION) }
             }
         }
     }
 
     // Run the real-picker test with stagePhotoReload=true, adb shell am force-stop the app,
-    // then run this method with verifyPhotoReload=true. Separate instrumentation runs are
+    // then run this method with verifyPhotoReload=true (without opening the unrelated default database). Separate instrumentation runs are
     // required because force-stop terminates the target process and its running tests.
     @Test fun verifyRealPickerPhotoAfterForceStop() {
         assumeTrue(InstrumentationRegistry.getArguments().getString("verifyPhotoReload") == "true")
@@ -251,7 +278,13 @@ class PhotoSelectionTest {
         val proof = JSONObject(proofFile.readText())
         val resolver = compose.activity.contentResolver
         val selectedUri = Uri.parse(proof.getString("returnedUri"))
+        val context = InstrumentationRegistry.getInstrumentation().targetContext
+        val databaseName = proof.getString("databaseName")
+        val database = AppDatabase.builder(context, databaseName).build()
         try {
+            val saved = runBlocking { RestaurantRepository(database.restaurantDao()).observeRestaurant(proof.getInt("restaurantId")).first() }!!
+            assertEquals(listOf(selectedUri.toString()), saved.photoUris)
+            assertEquals(listOf("A real picker photo — keep this."), saved.photoCaptions)
             assertNotEquals(proof.getInt("pickerPid"), Process.myPid())
             assertTrue(resolver.persistedUriPermissions.any { it.uri == selectedUri && it.isReadPermission })
             val reloadedBytes = resolver.openInputStream(selectedUri)!!.use { it.readBytes() }
@@ -268,6 +301,8 @@ class PhotoSelectionTest {
             }
             assertPhotoDecoded()
         } finally {
+            database.close()
+            context.deleteDatabase(databaseName)
             if (resolver.persistedUriPermissions.any { it.uri == selectedUri && it.isReadPermission }) {
                 resolver.releasePersistableUriPermission(selectedUri, Intent.FLAG_GRANT_READ_URI_PERMISSION)
             }
