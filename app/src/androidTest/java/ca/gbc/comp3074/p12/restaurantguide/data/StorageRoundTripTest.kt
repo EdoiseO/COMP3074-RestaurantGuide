@@ -56,7 +56,7 @@ class StorageRoundTripTest {
         } finally { db.close(); context.deleteDatabase(name) }
     }
 
-    @Test fun migrationPreservesUserRecordAndDoesNotReseedDeletedDemos() = runBlocking {
+    @Test fun unreleasedV1IsRebuiltWithoutReusingLegacyImages() = runBlocking {
         val name = "migration-${UUID.randomUUID()}"
         context.openOrCreateDatabase(name, Context.MODE_PRIVATE, null).use { old ->
             old.execSQL("""CREATE TABLE restaurants (id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
@@ -70,12 +70,15 @@ class StorageRoundTripTest {
         val db = AppDatabase.builder(context, name).build()
         try {
             val rows = db.restaurantDao().getAllRestaurants().first()
-            assertEquals(1, rows.size)
-            val row = rows.single().toDomain()
-            assertEquals(9, row.id)
-            assertEquals(listOf("", "caption"), row.photoCaptions)
-            assertEquals("content://cover", row.coverUri)
-            assertEquals(4.5f, row.rating)
+            assertTrue(rows.isEmpty())
+            // New writes use the current image catalog, never the old numeric IDs.
+            val source = DemoRestaurants.restaurants.first().copy(id = 0)
+            val id = db.restaurantDao().insertRestaurant(source.toEntity()).toInt()
+            val row = db.restaurantDao().getAllRestaurants().first().single()
+            assertEquals(source.copy(id = id), row.toDomain())
+            assertEquals("two_brothers_meal", row.photoKey)
+            assertEquals("two_brothers_map", row.mapKey)
+            assertEquals("two_brothers_full_map", row.fullMapKey)
         } finally { db.close(); context.deleteDatabase(name) }
     }
 }
