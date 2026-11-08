@@ -19,19 +19,40 @@ abstract class AppDatabase : RoomDatabase() {
 
         internal fun builder(context: Context, name: String): Builder<AppDatabase> =
             Room.databaseBuilder(context.applicationContext, AppDatabase::class.java, name)
-                // V1 was an unreleased prototype with unsafe numeric image IDs. Reset only
-                // that version; future versions must supply an explicit migration.
+                // Only unreleased V1 may reset and re-seed. Later schema versions need real
+                // migrations without seeding, so deleted demo rows stay deleted.
                 .fallbackToDestructiveMigrationFrom(true, 1)
                 .addCallback(object : Callback() {
                     override fun onCreate(db: SupportSQLiteDatabase) {
-                        // Room's schema creation transaction includes this synchronous callback.
-                        // No reader/writer can see half a seed or race its explicit IDs.
+                        seed(db)
+                    }
+
+                    override fun onDestructiveMigration(db: SupportSQLiteDatabase) {
                         seed(db)
                     }
                 })
 
         private fun seed(db: SupportSQLiteDatabase) {
-            DemoRestaurants.restaurants.forEach { insertRow(db, it.toEntity()) }
+            // Fresh creation and the V1 reset both run inside the framework's open/upgrade
+            // transaction. Keep schema creation and seeding atomic if called without one.
+            val ownsTransaction = !db.inTransaction()
+            if (ownsTransaction) db.beginTransaction()
+            try {
+                // Room 2.8.5 calls onDestructiveMigration AFTER dropping tables but BEFORE
+                // createAllTables. Create the V2 table here; Room's later IF NOT EXISTS is safe.
+                // Keep this definition aligned with the exported V2 Room schema.
+                db.execSQL("""CREATE TABLE IF NOT EXISTS restaurants (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL, name TEXT NOT NULL,
+                    description TEXT NOT NULL, address TEXT NOT NULL, phone TEXT NOT NULL,
+                    tagsJson TEXT NOT NULL, rating REAL NOT NULL, listSummary TEXT NOT NULL,
+                    notes TEXT NOT NULL, coverUri TEXT NOT NULL, photoKey TEXT,
+                    galleryKeysJson TEXT NOT NULL, mapKey TEXT, fullMapKey TEXT,
+                    photoUrisJson TEXT NOT NULL, photoCaptionsJson TEXT NOT NULL)""")
+                DemoRestaurants.restaurants.forEach { insertRow(db, it.toEntity()) }
+                if (ownsTransaction) db.setTransactionSuccessful()
+            } finally {
+                if (ownsTransaction) db.endTransaction()
+            }
         }
 
         private fun insertRow(db: SupportSQLiteDatabase, row: RestaurantEntity) {
