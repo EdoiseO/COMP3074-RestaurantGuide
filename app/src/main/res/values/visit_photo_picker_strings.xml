@@ -5,4 +5,8 @@
     <string name="visit_photo_body">Remember your meal, drink or visit.</string>
     <string name="visit_photo_choose">Choose photo</string>
     <string name="visit_photo_caption_hint">Add a short memory…</string>
+
+    <string name="photo_write_unavailable">Photo access was lost. Your changes were not saved. Reselect the photo and try again.</string>
+    <string name="photo_session_title">Photo saved for this session</string>
+    <string name="photo_session_warning">Your changes were saved, but the photo provider did not allow permanent access to one or more photos. They may become unavailable after restarting the app. Reselect them if needed.</string>
 </resources>
