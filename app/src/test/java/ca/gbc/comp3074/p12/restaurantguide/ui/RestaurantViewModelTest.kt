@@ -60,7 +60,7 @@ class RestaurantViewModelTest {
         assertNull(vm.state.value.completed)
         assertEquals(record, store.rows.value.single())
         store.failWrites = false
-        vm.retryWrite(); runCurrent()
+        vm.write(RestaurantWrite.EDIT, draft); runCurrent()
         assertEquals(draft, store.rows.value.single())
         assertEquals(RestaurantWrite.EDIT, vm.state.value.completed)
     }
@@ -71,7 +71,7 @@ class RestaurantViewModelTest {
         vm.write(RestaurantWrite.DELETE, record); runCurrent()
         assertEquals(listOf(record), vm.state.value.restaurants)
         store.failWrites = false; store.rows.value = emptyList()
-        vm.retryWrite(); runCurrent()
+        vm.write(RestaurantWrite.DELETE, record); runCurrent()
         assertEquals(RestaurantWriteError.MISSING, vm.state.value.writeError)
         assertNull(vm.state.value.completed)
     }
@@ -83,12 +83,29 @@ class RestaurantViewModelTest {
         store.failReads = true; vm.reload(); runCurrent()
         assertTrue(vm.state.value.loadFailed)
         assertNull(vm.state.value.writeError)
-        vm.retryWrite(); runCurrent()
+        store.failReads = false; vm.reload(); runCurrent()
+        assertEquals(1, store.calls)
+    }
+
+    @Test fun insertCompletionCarriesIdBeforeDelayedObservationAndReadRetryKeepsIt() = runTest(dispatcher) {
+        val store = ControlledStore().apply { delayEmission = true }
+        val vm = owner(store); runCurrent()
+        vm.write(RestaurantWrite.ADD, record); runCurrent()
+        assertEquals(1, vm.state.value.createdId)
+        assertTrue(vm.state.value.restaurants.isEmpty())
+        assertEquals(RestaurantWrite.ADD, vm.state.value.completed)
+        store.failReads = true; vm.reload(); runCurrent()
+        assertTrue(vm.state.value.loadFailed)
+        assertEquals(1, vm.state.value.createdId)
+        store.rows.value = listOf(record)
+        store.failReads = false; vm.reload(); runCurrent()
+        assertEquals(record, vm.state.value.restaurants.single())
         assertEquals(1, store.calls)
     }
 
     private class ControlledStore(initial: List<Restaurant> = emptyList()) : RestaurantStore {
         val rows = MutableStateFlow(initial)
+        var delayEmission = false
         var failReads = false
         var failWrites = false
         var calls = 0
@@ -100,7 +117,7 @@ class RestaurantViewModelTest {
         override suspend fun insert(restaurant: Restaurant): Int {
             beforeWrite()
             val id = (rows.value.maxOfOrNull { it.id } ?: 0) + 1
-            rows.value = rows.value + restaurant.copy(id = id)
+            if (!delayEmission) rows.value = rows.value + restaurant.copy(id = id)
             return id
         }
         override suspend fun update(restaurant: Restaurant) {

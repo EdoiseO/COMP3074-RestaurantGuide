@@ -18,6 +18,8 @@ enum class RestaurantWriteError { FAILED, MISSING }
 data class RestaurantUiState(
     val restaurants: List<Restaurant> = emptyList(),
     val loading: Boolean = true,
+    val hasLoaded: Boolean = false,
+    val createdId: Int? = null,
     val loadFailed: Boolean = false,
     val saving: Boolean = false,
     val writeError: RestaurantWriteError? = null,
@@ -30,7 +32,6 @@ class RestaurantViewModel(private val repository: RestaurantStore) : ViewModel()
     private val mutableState = MutableStateFlow(RestaurantUiState())
     val state = mutableState.asStateFlow()
     private var observation: Job? = null
-    private var pending: Pair<RestaurantWrite, Restaurant>? = null
 
     init { reload() }
 
@@ -40,7 +41,7 @@ class RestaurantViewModel(private val repository: RestaurantStore) : ViewModel()
         observation = viewModelScope.launch {
             try {
                 repository.allRestaurants.collect { rows ->
-                    mutableState.update { it.copy(restaurants = rows, loading = false, loadFailed = false) }
+                    mutableState.update { it.copy(restaurants = rows, loading = false, loadFailed = false, hasLoaded = true) }
                 }
             } catch (cancelled: CancellationException) {
                 throw cancelled
@@ -52,19 +53,18 @@ class RestaurantViewModel(private val repository: RestaurantStore) : ViewModel()
 
     fun write(kind: RestaurantWrite, restaurant: Restaurant) {
         if (state.value.saving || state.value.completed != null) return
-        pending = kind to restaurant
         mutableState.update { it.copy(saving = true, writeError = null) }
         viewModelScope.launch {
             try {
+                val createdId = if (kind == RestaurantWrite.ADD) repository.insert(restaurant) else null
                 when (kind) {
-                    RestaurantWrite.ADD -> repository.insert(restaurant)
+                    RestaurantWrite.ADD -> Unit
                     RestaurantWrite.EDIT, RestaurantWrite.DETAILS -> repository.update(restaurant)
                     RestaurantWrite.DELETE -> repository.delete(restaurant)
                 }
                 // Navigation is allowed only after the durable write. Observation supplies records;
                 // don't turn a later refresh error into a retryable write (which could duplicate Add).
-                pending = null
-                mutableState.update { it.copy(saving = false, completed = kind, revision = it.revision + 1) }
+                mutableState.update { it.copy(saving = false, completed = kind, createdId = createdId, revision = it.revision + 1) }
             } catch (cancelled: CancellationException) {
                 throw cancelled
             } catch (error: Exception) {
@@ -74,10 +74,8 @@ class RestaurantViewModel(private val repository: RestaurantStore) : ViewModel()
         }
     }
 
-    fun retryWrite() { pending?.let { (kind, restaurant) -> write(kind, restaurant) } }
     fun dismissWriteError() {
-        pending = null
         mutableState.update { it.copy(writeError = null) }
     }
-    fun acknowledgeWrite() { mutableState.update { it.copy(completed = null) } }
+    fun acknowledgeWrite() { mutableState.update { it.copy(completed = null, createdId = null) } }
 }
