@@ -1,7 +1,6 @@
 package ca.gbc.comp3074.p12.restaurantguide.ui
 
 import android.content.ActivityNotFoundException
-import android.content.Intent
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.PickVisualMediaRequest
 import androidx.activity.result.contract.ActivityResultContracts
@@ -42,7 +41,6 @@ import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -54,7 +52,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import androidx.core.net.toUri
 import ca.gbc.comp3074.p12.restaurantguide.R
 import ca.gbc.comp3074.p12.restaurantguide.ui.theme.RestaurantGuideTokens
 
@@ -84,7 +81,6 @@ fun VisitPhotoPicker(
     var selectionRevision by rememberSaveable { mutableIntStateOf(0) }
     // A restored or newly selected URI must be decoded before it is saveable.
     var status by remember(uri) { mutableStateOf(PhotoLoadStatus.Loading) }
-    val context = LocalContext.current
     val picker = rememberLauncherForActivityResult(ActivityResultContracts.PickVisualMedia()) { selected ->
         if (selected != null) {
             status = PhotoLoadStatus.Loading
@@ -93,10 +89,10 @@ fun VisitPhotoPicker(
             launchFailed = false
         }
     }
-    val saveReady = uri != null && status == PhotoLoadStatus.Ready
+    val saveReady = uri != null && status == PhotoLoadStatus.Ready && !saving
     AppDialog(
         title = title ?: stringResource(R.string.details_add_visit_photo),
-        onDismissRequest = onDismiss,
+        onDismissRequest = { if (!saving) onDismiss() },
         modifier = Modifier.testTag("visit-photo-picker"),
         body = body,
         content = {
@@ -146,16 +142,6 @@ fun VisitPhotoPicker(
             modifier = Modifier.testTag("visit-photo-save"),
             onClick = {
                 uri?.takeIf { status == PhotoLoadStatus.Ready }?.let { selected ->
-                    if (selected.toUri().scheme == "content") {
-                        try {
-                            context.contentResolver.takePersistableUriPermission(
-                                selected.toUri(), Intent.FLAG_GRANT_READ_URI_PERMISSION,
-                            )
-                        } catch (_: SecurityException) {
-                            // A readable temporary grant is valid for this session. The loader
-                            // reports an unavailable photo if a provider later revokes access.
-                        }
-                    }
                     onSave(selected, if (includeCaption) caption.trim() else "")
                 }
             },

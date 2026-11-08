@@ -7,7 +7,7 @@ Android UI prototype built with Kotlin and Jetpack Compose. Save restaurant deta
 ## Run the app
 
 1. Clone this repository and open it in Android Studio.
-2. Install Android SDK Platform 37 and use JDK 17 or newer.
+2. Install Android SDK Platform 37 and use JDK 21.
 3. Sync Gradle, then run `app` on a device or emulator (Android API 24 or newer).
 
 ```sh
@@ -22,7 +22,7 @@ Unit tests: `./gradlew :app:testDebugUnitTest`. Device tests: `./gradlew :app:co
 
 Includes Splash, Restaurant List, Details, Add/Edit, photo gallery with zoom, visit notes, a map preview, email sharing and About. Back preserves list filters; form Save applies changes and Back discards them.
 
-Database integration is under review. Screens now observe a Room-backed `RestaurantStore` through a ViewModel, with loading/retry states and errors that keep unsaved drafts available. Save and Delete navigate only after the write succeeds. Fresh installs and resets of the unreleased version 1 database seed three demo restaurants. Normal opens and future migrations must not re-seed deleted demos. Persistent photo access remains outstanding. Maps still use static previews with a directions URL; live maps, geocoding and current-location permissions are not implemented. Share opens a text chooser with a copyable fallback; actual external handoffs still need device verification.
+Database integration is under review. Screens now observe a Room-backed `RestaurantStore` through a ViewModel, with loading/retry states and errors that keep unsaved drafts available. Save and Delete navigate only after the write succeeds. Bundled images and maps use stable resource names; tags, photo URIs and captions use JSON arrays. Fresh installs and resets of the unreleased version 1 database atomically seed three demo restaurants. Normal opens and future migrations must not re-seed deleted demos. Photo access is checked before the database write, with the form locked throughout. Persistable read grants are retained and released only when no saved cover/album uses them. Readable photos whose provider refuses permanent access still save with a session-only warning; unavailable sources leave the draft intact. Maps still use static previews with a directions URL; live maps, geocoding and current-location permissions are not implemented. Share opens a text chooser with a copyable fallback; actual external handoffs still need device verification.
 
 ## Project links
 

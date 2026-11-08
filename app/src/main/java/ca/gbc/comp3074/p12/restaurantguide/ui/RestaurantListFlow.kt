@@ -36,6 +36,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import ca.gbc.comp3074.p12.restaurantguide.R
 import ca.gbc.comp3074.p12.restaurantguide.data.AppDatabase
 import ca.gbc.comp3074.p12.restaurantguide.data.Restaurant
+import ca.gbc.comp3074.p12.restaurantguide.data.RestaurantPhotoAccess
 import ca.gbc.comp3074.p12.restaurantguide.data.RestaurantRepository
 import kotlinx.coroutines.launch
 
@@ -45,8 +46,12 @@ private val TagsSaver = listSaver<List<String>, String>(save = { it }, restore =
 fun RestaurantListFlow() {
     val context = LocalContext.current.applicationContext
     val owner: RestaurantViewModel = viewModel(factory = viewModelFactory {
-        initializer { RestaurantViewModel(RestaurantRepository(
-            AppDatabase.getDatabase(context).restaurantDao())) }
+        initializer {
+            RestaurantViewModel(
+                RestaurantRepository(AppDatabase.getDatabase(context).restaurantDao()),
+                RestaurantPhotoAccess.get(context),
+            )
+        }
     })
     RestaurantListFlow(owner)
 }
@@ -107,6 +112,7 @@ fun RestaurantListFlow(viewModel: RestaurantViewModel) {
     }
     val error = when (state.writeError) {
         RestaurantWriteError.FAILED -> stringResource(R.string.storage_write_failed)
+        RestaurantWriteError.PHOTO_UNAVAILABLE -> stringResource(R.string.photo_write_unavailable)
         RestaurantWriteError.MISSING -> stringResource(R.string.storage_record_missing)
         null -> null
     }
@@ -191,6 +197,15 @@ fun RestaurantListFlow(viewModel: RestaurantViewModel) {
                 Modifier.testTag("storage-retry"))
         },
     )
+    if (state.sessionPhotoWarning) AppDialog(
+        title = stringResource(R.string.photo_session_title),
+        body = stringResource(R.string.photo_session_warning),
+        onDismissRequest = viewModel::dismissPhotoWarning,
+        modifier = Modifier.testTag("photo-session-warning"),
+    ) {
+        AppDialogButton(stringResource(R.string.details_got_it), viewModel::dismissPhotoWarning,
+            Modifier.testTag("photo-session-ok"))
+    }
     // Prevent additional edits or Back while the captured draft is being committed.
     // A separate window also blocks input to a Notes/Photo dialog that is already open.
     if (state.saving) AppDialog(

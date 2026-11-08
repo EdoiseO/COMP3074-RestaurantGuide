@@ -3,6 +3,10 @@ package ca.gbc.comp3074.p12.restaurantguide.ui
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import ca.gbc.comp3074.p12.restaurantguide.data.Restaurant
+import ca.gbc.comp3074.p12.restaurantguide.data.PhotoWriteCoordinator
+import ca.gbc.comp3074.p12.restaurantguide.data.PhotoUnavailableException
+import ca.gbc.comp3074.p12.restaurantguide.data.PhotoWriteResult
+import ca.gbc.comp3074.p12.restaurantguide.data.photoReferences
 import ca.gbc.comp3074.p12.restaurantguide.data.RestaurantMissingException
 import ca.gbc.comp3074.p12.restaurantguide.data.RestaurantStore
 import kotlinx.coroutines.CancellationException
@@ -13,7 +17,7 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 
 enum class RestaurantWrite { ADD, EDIT, DETAILS, DELETE }
-enum class RestaurantWriteError { FAILED, MISSING }
+enum class RestaurantWriteError { FAILED, MISSING, PHOTO_UNAVAILABLE }
 
 data class RestaurantUiState(
     val restaurants: List<Restaurant> = emptyList(),
@@ -22,18 +26,29 @@ data class RestaurantUiState(
     val createdId: Int? = null,
     val loadFailed: Boolean = false,
     val saving: Boolean = false,
+    val sessionPhotoWarning: Boolean = false,
     val writeError: RestaurantWriteError? = null,
     val completed: RestaurantWrite? = null,
     val revision: Int = 0,
 )
 
 /** Navigation remains in Compose; this owner keeps an in-flight write alive across rotation. */
-class RestaurantViewModel(private val repository: RestaurantStore) : ViewModel() {
+class RestaurantViewModel(
+    private val repository: RestaurantStore,
+    private val photoAccess: PhotoWriteCoordinator? = null,
+) : ViewModel() {
     private val mutableState = MutableStateFlow(RestaurantUiState())
     val state = mutableState.asStateFlow()
     private var observation: Job? = null
 
-    init { reload() }
+    init {
+        reload()
+        viewModelScope.launch {
+            try { photoAccess?.reconcile(repository) }
+            catch (cancelled: CancellationException) { throw cancelled }
+            catch (_: Exception) { /* Retry cleanup on the next successful write/open. */ }
+        }
+    }
 
     fun reload() {
         observation?.cancel()
@@ -56,20 +71,29 @@ class RestaurantViewModel(private val repository: RestaurantStore) : ViewModel()
         mutableState.update { it.copy(saving = true, writeError = null) }
         viewModelScope.launch {
             try {
-                val createdId = if (kind == RestaurantWrite.ADD) repository.insert(restaurant) else null
-                when (kind) {
-                    RestaurantWrite.ADD -> Unit
-                    RestaurantWrite.EDIT, RestaurantWrite.DETAILS -> repository.update(restaurant)
-                    RestaurantWrite.DELETE -> repository.delete(restaurant)
+                val commit: suspend () -> Int? = {
+                    when (kind) {
+                        RestaurantWrite.ADD -> repository.insert(restaurant)
+                        RestaurantWrite.EDIT, RestaurantWrite.DETAILS -> { repository.update(restaurant); null }
+                        RestaurantWrite.DELETE -> { repository.delete(restaurant); null }
+                    }
                 }
+                val result = photoAccess?.commit(repository,
+                    if (kind == RestaurantWrite.DELETE) emptySet() else restaurant.photoReferences(), commit)
+                    ?: PhotoWriteResult(commit(), false)
+                val createdId = result.value
                 // Navigation is allowed only after the durable write. Observation supplies records;
                 // don't turn a later refresh error into a retryable write (which could duplicate Add).
-                mutableState.update { it.copy(saving = false, completed = kind, createdId = createdId, revision = it.revision + 1) }
+                mutableState.update { it.copy(saving = false, completed = kind, createdId = createdId, sessionPhotoWarning = result.sessionOnly, revision = it.revision + 1) }
             } catch (cancelled: CancellationException) {
                 throw cancelled
             } catch (error: Exception) {
                 mutableState.update { it.copy(saving = false, writeError =
-                    if (error is RestaurantMissingException) RestaurantWriteError.MISSING else RestaurantWriteError.FAILED) }
+                    when (error) {
+                        is RestaurantMissingException -> RestaurantWriteError.MISSING
+                        is PhotoUnavailableException -> RestaurantWriteError.PHOTO_UNAVAILABLE
+                        else -> RestaurantWriteError.FAILED
+                    }) }
             }
         }
     }
@@ -77,5 +101,6 @@ class RestaurantViewModel(private val repository: RestaurantStore) : ViewModel()
     fun dismissWriteError() {
         mutableState.update { it.copy(writeError = null) }
     }
+    fun dismissPhotoWarning() { mutableState.update { it.copy(sessionPhotoWarning = false) } }
     fun acknowledgeWrite() { mutableState.update { it.copy(completed = null, createdId = null) } }
 }
