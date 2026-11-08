@@ -17,14 +17,7 @@ import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.lifecycle.viewmodel.compose.viewModel
 import ca.gbc.comp3074.p12.restaurantguide.data.DemoRestaurants
 import ca.gbc.comp3074.p12.restaurantguide.data.Restaurant
-import ca.gbc.comp3074.p12.restaurantguide.data.restoreRestaurantState
-import ca.gbc.comp3074.p12.restaurantguide.data.saveRestaurantState
 import kotlinx.coroutines.launch
-
-private val RestaurantsSaver = listSaver<List<Restaurant>, Any>(
-    save = { saveRestaurantState(it) },
-    restore = ::restoreRestaurantState,
-)
 
 private val TagsSaver = listSaver<List<String>, String>(save = { it }, restore = { it })
 

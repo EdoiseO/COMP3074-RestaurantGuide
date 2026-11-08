@@ -1,7 +1,6 @@
 package ca.gbc.comp3074.p12.restaurantguide.data
 
 import android.content.Context
-import android.database.sqlite.SQLiteDatabase
 import androidx.test.platform.app.InstrumentationRegistry
 import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
