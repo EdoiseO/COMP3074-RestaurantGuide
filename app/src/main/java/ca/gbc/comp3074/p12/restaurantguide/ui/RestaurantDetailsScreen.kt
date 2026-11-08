@@ -1,5 +1,11 @@
 package ca.gbc.comp3074.p12.restaurantguide.ui
 
+import android.content.ActivityNotFoundException
+import android.content.Intent
+import android.net.Uri
+import androidx.compose.foundation.text.selection.SelectionContainer
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.Role
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -119,6 +125,8 @@ fun RestaurantDetailsScreen(
             notesOpen = false; addPhotoOpen = false; pendingRevision = null
         }
     }
+    val context = LocalContext.current
+    var unavailablePhone by rememberSaveable(restaurant.id) { mutableStateOf<String?>(null) }
     val photos = restaurantPhotos(restaurant)
     val cover = restaurantCoverPhoto(restaurant)
     val openPhoto: (Int) -> Unit = { index -> viewingCover = false; photoIndex = index; photoOpen = true }
@@ -211,7 +219,13 @@ fun RestaurantDetailsScreen(
                     Spacer(Modifier.height(0.dp))
                     Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                         ContactColumn(stringResource(R.string.destination_address), restaurant.address, R.drawable.ic_contact_pin, Modifier.weight(1f))
-                        ContactColumn(stringResource(R.string.destination_phone), restaurant.phone, R.drawable.ic_phone, Modifier.weight(1f))
+                        ContactColumn(stringResource(R.string.destination_phone), restaurant.phone, R.drawable.ic_phone, Modifier.weight(1f)) { number ->
+                            try {
+                                context.startActivity(Intent(Intent.ACTION_DIAL, Uri.fromParts("tel", number, null)))
+                            } catch (_: ActivityNotFoundException) {
+                                unavailablePhone = number
+                            }
+                        }
                     }
                     Spacer(Modifier.height(0.dp))
                     RestaurantMapPreview(restaurant, Modifier.fillMaxWidth().height(160.dp)
@@ -259,6 +273,18 @@ fun RestaurantDetailsScreen(
         }
     }
 
+    unavailablePhone?.let { number ->
+        AppDialog(
+            title = stringResource(R.string.details_phone_unavailable_title),
+            body = stringResource(R.string.details_phone_unavailable_body),
+            onDismissRequest = { unavailablePhone = null },
+            modifier = Modifier.testTag("phone-unavailable"),
+            content = { SelectionContainer { Text(number) } },
+            actions = {
+                AppDialogButton(stringResource(R.string.details_got_it), { unavailablePhone = null })
+            },
+        )
+    }
     if (deleteOpen) {
         AppDialog(
             title = stringResource(R.string.details_delete_title),
@@ -308,13 +334,27 @@ private fun DetailsBody(text: String) {
 }
 
 @Composable
-private fun ContactColumn(label: String, value: String, icon: Int, modifier: Modifier) {
+private fun ContactColumn(
+    label: String, value: String, icon: Int, modifier: Modifier,
+    onValueClick: ((String) -> Unit)? = null,
+) {
+    // The form accepts multiple phone numbers separated by newlines or semicolons.
+    val values = if (onValueClick == null) listOf(value)
+        else value.split('\n', ';').map(String::trim).filter(String::isNotEmpty).distinct().ifEmpty { listOf("") }
     Column(modifier, verticalArrangement = Arrangement.spacedBy(8.dp)) {
         Text(label, color = DetailsHeading, fontSize = 20.sp, lineHeight = 28.sp, fontWeight = FontWeight.Bold)
-        Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-            Icon(painterResource(icon), null, Modifier.size(20.dp), tint = DetailsHeading)
-            Text(value.ifBlank { stringResource(R.string.details_not_added) }, Modifier.weight(1f),
-                color = DetailsText, fontSize = 14.sp, lineHeight = 20.sp)
+        values.forEachIndexed { index, contact ->
+            val dialLabel = stringResource(R.string.details_dial_number, contact)
+            val rowModifier = if (onValueClick != null && contact.isNotBlank()) {
+                Modifier.fillMaxWidth().heightIn(min = 48.dp).testTag("details-phone-$index")
+                    .clickable(role = Role.Button, onClickLabel = dialLabel) { onValueClick(contact) }
+            } else Modifier
+            Row(rowModifier, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                Icon(painterResource(icon), null, Modifier.size(20.dp), tint = DetailsHeading)
+                Text(contact.ifBlank { stringResource(R.string.details_not_added) }, Modifier.weight(1f),
+                    color = if (onValueClick != null && contact.isNotBlank()) DetailsHeading else DetailsText,
+                    fontSize = 14.sp, lineHeight = 20.sp)
+            }
         }
     }
 }

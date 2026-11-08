@@ -24,4 +24,7 @@
     <string name="details_selected_photo">Selected visit photo</string>
     <string name="details_caption">Caption (optional)</string>
     <string name="details_share_unavailable">No sharing app is available. You can copy these restaurant details.</string>
+    <string name="details_dial_number">Open dialer for %1$s</string>
+    <string name="details_phone_unavailable_title">Phone app unavailable</string>
+    <string name="details_phone_unavailable_body">No phone app is available. You can copy this number.</string>
 </resources>

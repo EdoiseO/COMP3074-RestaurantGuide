@@ -211,6 +211,76 @@ class RestaurantDetailsFlowTest {
         assertTrue(unavailable)
     }
 
+    @Test fun phoneTapOpensDialerForSelectedRestaurantAndKeepsSearch() {
+        val dialer = DialerContext(compose.activity)
+        compose.setContent {
+            CompositionLocalProvider(LocalContext provides dialer) {
+                RestaurantGuideTheme { TestRestaurantListFlow() }
+            }
+        }
+        compose.onNodeWithTag("restaurant-search").performTextInput("Unica")
+        compose.onNodeWithTag("restaurant-card-3").performClick()
+        compose.onNodeWithTag("details-phone-0").performScrollTo().performClick()
+        assertEquals(Intent.ACTION_DIAL, dialer.attempted?.action)
+        assertEquals("tel", dialer.attempted?.data?.scheme)
+        assertEquals("437-216-6130", dialer.attempted?.data?.schemeSpecificPart)
+        compose.onNodeWithTag("restaurant-details").assertIsDisplayed()
+        compose.onNodeWithTag("details-back").performClick()
+        compose.onNodeWithTag("restaurant-search").assertTextContains("Unica")
+    }
+
+    @Test fun eachSavedPhoneNumberHasItsOwnDialAction() {
+        val dialer = DialerContext(compose.activity)
+        val record = DemoRestaurants.restaurants.first().copy(phone = "+1 (416) 201-8280;416-555-0100\n416-555-0101")
+        compose.setContent {
+            CompositionLocalProvider(LocalContext provides dialer) {
+                RestaurantGuideTheme { TestRestaurantListFlow(listOf(record)) }
+            }
+        }
+        openRestaurant(1)
+        listOf("+1 (416) 201-8280", "416-555-0100", "416-555-0101").forEachIndexed { index, number ->
+            compose.onNodeWithTag("details-phone-$index").performScrollTo().performClick()
+            assertEquals(Intent.ACTION_DIAL, dialer.attempted?.action)
+            assertEquals(number, dialer.attempted?.data?.schemeSpecificPart)
+        }
+    }
+
+    @Test fun missingPhoneDoesNotOfferADialAction() {
+        compose.setContent {
+            RestaurantGuideTheme {
+                TestRestaurantListFlow(listOf(DemoRestaurants.restaurants.first().copy(phone = "")))
+            }
+        }
+        openRestaurant(1)
+        compose.onNodeWithText("Not added").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithTag("details-phone-0").assertDoesNotExist()
+    }
+
+    @Test fun missingDialerShowsCopyableNumberAndDismissesBackToDetails() {
+        val dialer = DialerContext(compose.activity, unavailable = true)
+        compose.setContent {
+            CompositionLocalProvider(LocalContext provides dialer) {
+                RestaurantGuideTheme { TestRestaurantListFlow() }
+            }
+        }
+        openRestaurant(1)
+        compose.onNodeWithTag("details-phone-0").performScrollTo().performClick()
+        compose.onNodeWithTag("phone-unavailable").assertIsDisplayed()
+        compose.onNodeWithText("No phone app is available. You can copy this number.").assertIsDisplayed()
+        assertEquals("416-201-8280", dialer.attempted?.data?.schemeSpecificPart)
+        compose.onNodeWithText("Got it").performClick()
+        compose.onNodeWithTag("phone-unavailable").assertDoesNotExist()
+        compose.onNodeWithTag("restaurant-details").assertIsDisplayed()
+    }
+
+    private class DialerContext(context: Context, val unavailable: Boolean = false) : ContextWrapper(context) {
+        var attempted: Intent? = null
+        override fun startActivity(intent: Intent) {
+            attempted = intent
+            if (unavailable) throw ActivityNotFoundException("No dialer test fixture")
+        }
+    }
+
     private fun openRestaurant(id: Int) {
         compose.onNodeWithTag("restaurant-list").performScrollToNode(hasTestTag("restaurant-card-$id"))
         compose.onNodeWithTag("restaurant-card-$id").performClick()
