@@ -2,7 +2,7 @@ package ca.gbc.comp3074.p12.restaurantguide.data
 
 import ca.gbc.comp3074.p12.restaurantguide.R
 
-/** In-memory wireframe records, enriched from official menus/contact pages on October 10, 2026.
+/** Starter records for a new database, with restaurant sources recorded in README.md.
  * Ratings are sample personal ratings, not public review scores. See README.md for sources.
  */
 object DemoRestaurants {
@@ -57,6 +57,20 @@ object DemoRestaurants {
             mapRes = R.drawable.la_unica_map,
             fullMapRes = R.drawable.la_unica_full_map,
             listSummary = "Mexican bakery • Tacos • Birria",
+        ),
+        Restaurant(
+            id = 4,
+            name = "The Fry",
+            description = "Korean fried chicken on Bloor Street West in the Annex, " +
+                "with fried chicken, sides, soup and drinks.",
+            address = "524 Bloor St W, Toronto, ON M5S 1Y3",
+            phone = "647-352-0999",
+            tags = listOf("Korean", "Fried chicken"),
+            rating = 3.5f,
+            photoRes = R.drawable.the_fry_storefront,
+            galleryRes = listOf(R.drawable.the_fry_chicken_spread,
+                R.drawable.the_fry_chicken_plates, R.drawable.the_fry_storefront),
+            listSummary = "Korean • Fried chicken",
         ),
     )
 }

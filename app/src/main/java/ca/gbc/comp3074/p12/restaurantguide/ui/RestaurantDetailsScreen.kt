@@ -94,7 +94,15 @@ private fun restaurantResourcePhoto(resourceId: Int, restaurantName: String): Re
         R.drawable.two_brothers_chicken -> "Chicken shawarma plate"
         R.drawable.two_brothers_falafel -> "Falafel plate"
         R.drawable.two_brothers_baklava -> "Baklava"
+        R.drawable.the_fry_storefront -> "The Fry — Bloor storefront"
+        R.drawable.the_fry_chicken_spread -> "Korean fried chicken"
+        R.drawable.the_fry_chicken_plates -> "Chicken plates"
         else -> restaurantName
+    }, caption = when (resourceId) {
+        R.drawable.the_fry_chicken_spread -> "Reference photo: Tonmoy via Google Maps."
+        R.drawable.the_fry_storefront, R.drawable.the_fry_chicken_plates ->
+            "Reference photo supplied for the prototype."
+        else -> ""
     })
 
 @OptIn(ExperimentalLayoutApi::class)

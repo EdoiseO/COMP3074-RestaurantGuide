@@ -76,7 +76,7 @@ class RestaurantDetailsFlowTest {
         compose.onNodeWithTag("restaurant-details").assertIsDisplayed()
         compose.onNodeWithTag("details-delete").performClick()
         compose.onNodeWithTag("confirm-delete").performClick()
-        compose.onNodeWithTag("result-count").assertTextContains("2 saved")
+        compose.onNodeWithTag("result-count").assertTextContains("3 saved")
         compose.onNodeWithTag("restaurant-card-1").assertIsDisplayed()
         compose.onNodeWithTag("restaurant-card-3").assertDoesNotExist()
         compose.onNodeWithTag("restaurant-list").performScrollToNode(hasTestTag("restaurant-card-2"))
@@ -189,7 +189,7 @@ class RestaurantDetailsFlowTest {
         compose.onNodeWithTag("edit-name").assertTextContains("Two Brothers Shawarma")
         compose.onNodeWithTag("edit-cancel").performClick()
         compose.onNodeWithTag("details-back").performClick()
-        compose.onNodeWithTag("result-count").assertTextContains("3 saved")
+        compose.onNodeWithTag("result-count").assertTextContains("4 saved")
     }
 
     @Test fun shareChooserIncludesCompletePayloadAndNoHandlerDoesNotLaunch() {

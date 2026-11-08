@@ -120,9 +120,9 @@ class PersistentUiFlowTest {
         compose.onNodeWithTag("details-delete").performClick()
         compose.onNodeWithTag("confirm-delete").performClick()
         compose.onNodeWithText("Changes were not saved. Your draft is still here. Please try again.").assertIsDisplayed()
-        compose.runOnIdle { assertEquals(3, store.allRestaurants.value.size); store.failWrites = false }
+        compose.runOnIdle { assertEquals(4, store.allRestaurants.value.size); store.failWrites = false }
         compose.onNodeWithTag("confirm-delete").performClick()
-        compose.onNodeWithTag("result-count").assertTextContains("2 saved")
+        compose.onNodeWithTag("result-count").assertTextContains("3 saved")
     }
 
     @Test fun missingSelectedRecordOffersBackAndKeepsSearch() {

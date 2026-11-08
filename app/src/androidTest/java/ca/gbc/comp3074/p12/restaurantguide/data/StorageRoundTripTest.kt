@@ -1,6 +1,7 @@
 package ca.gbc.comp3074.p12.restaurantguide.data
 
 import android.content.Context
+import android.graphics.BitmapFactory
 import androidx.room.RoomDatabase
 import androidx.sqlite.db.SupportSQLiteDatabase
 import androidx.test.platform.app.InstrumentationRegistry
@@ -14,6 +15,31 @@ import java.util.UUID
 
 class StorageRoundTripTest {
     private val context = InstrumentationRegistry.getInstrumentation().targetContext
+
+    @Test fun freshDatabaseIncludesTheFryWithOfflinePhotosAndSurvivesReopen() = runBlocking {
+        val name = "four-seeds-${UUID.randomUUID()}"
+        var db = AppDatabase.builder(context, name).build()
+        try {
+            val rows = db.restaurantDao().getAllRestaurants().first()
+            assertEquals(listOf(4, 3, 2, 1), rows.map { it.id })
+            val fry = rows.first().toDomain()
+            assertEquals("The Fry", fry.name)
+            assertEquals(listOf("Korean", "Fried chicken"), fry.tags)
+            assertEquals(3.5f, fry.rating)
+            assertEquals("the_fry_storefront", rows.first().photoKey)
+            assertEquals(3, fry.galleryRes.size)
+            (fry.galleryRes + listOfNotNull(fry.photoRes)).distinct().forEach { resource ->
+                val bounds = BitmapFactory.Options().apply { inJustDecodeBounds = true }
+                BitmapFactory.decodeResource(context.resources, resource, bounds)
+                assertTrue("Bundled photo must decode", bounds.outWidth > 0 && bounds.outHeight > 0)
+            }
+            assertNull(fry.mapRes)
+            assertNull(fry.fullMapRes)
+            db.close()
+            db = AppDatabase.builder(context, name).build()
+            assertEquals(rows, db.restaurantDao().getAllRestaurants().first())
+        } finally { db.close(); context.deleteDatabase(name) }
+    }
 
     @Test fun losslessFieldsAndStableResourceKeysSurviveReopen() = runBlocking {
         val name = "round-trip-${UUID.randomUUID()}"
@@ -42,19 +68,19 @@ class StorageRoundTripTest {
             val inserted = coroutineScope {
                 val read = async { db.restaurantDao().getAllRestaurants().first() }
                 val write = async { db.restaurantDao().insertRestaurant(DemoRestaurants.restaurants.first().copy(id = 0, name = "User restaurant").toEntity()) }
-                assertTrue(read.await().size >= 3)
+                assertTrue(read.await().size >= 4)
                 write.await().toInt()
             }
-            assertTrue(inserted > 3)
+            assertEquals(5, inserted)
             val all = db.restaurantDao().getAllRestaurants().first()
-            assertEquals(4, all.size)
+            assertEquals(5, all.size)
             assertEquals("User restaurant", all.single { it.id == inserted }.name)
-            db.restaurantDao().deleteRestaurant(all.single { it.id == 1 })
+            db.restaurantDao().deleteRestaurant(all.single { it.id == 4 })
             db.close()
             db = AppDatabase.builder(context, name).build()
             val reopened = db.restaurantDao().getAllRestaurants().first()
-            assertEquals(3, reopened.size)
-            assertFalse(reopened.any { it.id == 1 })
+            assertEquals(4, reopened.size)
+            assertFalse(reopened.any { it.id == 4 })
         } finally { db.close(); context.deleteDatabase(name) }
     }
 
@@ -77,31 +103,33 @@ class StorageRoundTripTest {
                     assertTrue("Reset must be inside the upgrade transaction", resetWasTransactional)
                     db.query("SELECT count(*) FROM restaurants").use {
                         assertTrue(it.moveToFirst())
-                        assertEquals(3, it.getInt(0))
+                        assertEquals(4, it.getInt(0))
                     }
                 }
             }).build()
         try {
             val rows = db.restaurantDao().getAllRestaurants().first()
             assertTrue(resetWasTransactional)
-            assertEquals(listOf(3, 2, 1), rows.map { it.id })
+            assertEquals(listOf(4, 3, 2, 1), rows.map { it.id })
             assertEquals(DemoRestaurants.restaurants.sortedByDescending { it.id }.map { it.name }, rows.map { it.name })
-            assertTrue(rows.all { it.mapKey != null && it.fullMapKey != null })
+            assertTrue(rows.filter { it.id != 4 }.all { it.mapKey != null && it.fullMapKey != null })
+            assertNull(rows.first().mapKey)
+            assertNull(rows.first().fullMapKey)
             assertFalse(rows.any { it.id == 9 || it.name == "User" })
             db.openHelper.readableDatabase.query("SELECT seq FROM sqlite_sequence WHERE name = 'restaurants'").use {
                 assertTrue(it.moveToFirst())
-                assertEquals(3, it.getInt(0))
+                assertEquals(4, it.getInt(0))
             }
             val repository = RestaurantRepository(db.restaurantDao())
             repository.insert(DemoRestaurants.restaurants.first().copy(id = 0, name = "Added after reset"))
-            assertEquals(4, repository.allRestaurants.first().single { it.name == "Added after reset" }.id)
+            assertEquals(5, repository.allRestaurants.first().single { it.name == "Added after reset" }.id)
             db.close()
             db = AppDatabase.builder(context, name).build()
-            assertEquals(listOf(4, 3, 2, 1), db.restaurantDao().getAllRestaurants().first().map { it.id })
+            assertEquals(listOf(5, 4, 3, 2, 1), db.restaurantDao().getAllRestaurants().first().map { it.id })
             db.restaurantDao().deleteRestaurant(db.restaurantDao().getAllRestaurants().first().single { it.id == 1 })
             db.close()
             db = AppDatabase.builder(context, name).build()
-            assertEquals(listOf(4, 3, 2), db.restaurantDao().getAllRestaurants().first().map { it.id })
+            assertEquals(listOf(5, 4, 3, 2), db.restaurantDao().getAllRestaurants().first().map { it.id })
         } finally { db.close(); context.deleteDatabase(name) }
     }
 }

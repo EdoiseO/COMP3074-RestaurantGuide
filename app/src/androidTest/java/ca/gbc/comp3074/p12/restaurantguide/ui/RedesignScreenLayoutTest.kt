@@ -27,14 +27,14 @@ class RedesignScreenLayoutTest {
                 }
             }
         }
-        compose.onNodeWithTag("result-count").assertTextEquals("3 saved").assertIsDisplayed()
+        compose.onNodeWithTag("result-count").assertTextEquals("4 saved").assertIsDisplayed()
         compose.onNodeWithTag("list-about").assertIsDisplayed().performClick()
         compose.onNodeWithText("← Back").performClick()
         compose.onNodeWithTag("restaurant-search").performTextInput("zzzz")
         compose.onNodeWithTag("restaurant-search").performImeAction()
         compose.onNodeWithTag("result-count").assertTextEquals("0 saved")
         compose.onNodeWithTag("clear-search").assertIsDisplayed().performClick()
-        compose.onNodeWithTag("result-count").assertTextEquals("3 saved")
+        compose.onNodeWithTag("result-count").assertTextEquals("4 saved")
         compose.onNodeWithTag("add-restaurant").assertIsDisplayed()
     }
 
@@ -60,6 +60,6 @@ class RedesignScreenLayoutTest {
         compose.onNodeWithTag("details-delete").assertIsDisplayed().performClick()
         compose.onNodeWithTag("delete-cancel").performClick()
         compose.onNodeWithTag("details-back").performClick()
-        compose.onNodeWithTag("result-count").assertTextEquals("3 saved")
+        compose.onNodeWithTag("result-count").assertTextEquals("4 saved")
     }
 }
