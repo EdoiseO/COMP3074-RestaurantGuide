@@ -149,9 +149,17 @@ class PhotoSelectionTest {
             val activePackage = automation.rootInActiveWindow?.packageName?.toString()
             activePackage != null && activePackage != compose.activity.packageName
         }
-        automation.performGlobalAction(AccessibilityService.GLOBAL_ACTION_BACK)
+        // DocumentsUI can reopen with its search/keyboard active. Back first closes those
+        // layers, so keep backing out of external UI only until our activity is active.
+        var lastBack = 0L
         compose.waitUntil(10_000) {
-            automation.rootInActiveWindow?.packageName?.toString() == compose.activity.packageName
+            val returned = automation.rootInActiveWindow?.packageName?.toString() == compose.activity.packageName
+            val now = android.os.SystemClock.uptimeMillis()
+            if (!returned && now - lastBack >= 500) {
+                automation.performGlobalAction(AccessibilityService.GLOBAL_ACTION_BACK)
+                lastBack = now
+            }
+            returned
         }
         compose.waitForIdle()
         compose.onNodeWithTag("visit-photo-save").assertIsNotEnabled()
