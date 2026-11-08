@@ -27,7 +27,8 @@ Restaurants are saved locally with Room. Screens observe a Room-backed `Restaura
 ## Project links
 
 - [Figma design](https://www.figma.com/design/8Z8T16iL2SBTzZm6pUShAA)
-- [Final presentation](https://drive.google.com/file/d/1W0jKW0yuCQhGVjLw8sTrYKg9-VvY8BYh/view)
+- [Functional prototype demo (November)](https://youtu.be/kSDA8oDyH7M)
+- [Design presentation (October)](https://drive.google.com/file/d/1W0jKW0yuCQhGVjLw8sTrYKg9-VvY8BYh/view)
 - [Project design proposal](https://docs.google.com/document/d/1NKr3KEbKyUrFnKXlOMboBQbfbuzSqtX0LajzcLMMMd0/edit)
 
 Team: Kalid Ali, Phillip Onofua, Mohamed Amine OUATAR and Joshua Zaakir.
