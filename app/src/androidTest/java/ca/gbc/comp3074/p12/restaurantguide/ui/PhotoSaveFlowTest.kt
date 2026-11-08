@@ -18,7 +18,7 @@ class PhotoSaveFlowTest {
 
     @Test fun formLocksAcrossRecreationUntilPhotoCheckAndDatabaseWriteFinish() {
         val photo = "content://test/photo"
-        val seed = Restaurant(1, "Photo cafe", "", "", "", emptyList(), 4.5f, coverUri = photo)
+        val seed = Restaurant(1, "Photo cafe", "", "", "", emptyList(), 4.5f)
         val store = FakeRestaurantStore(listOf(seed))
         val gate = CompletableDeferred<Unit>()
         val grants = object : PhotoGrants {
@@ -34,7 +34,11 @@ class PhotoSaveFlowTest {
         compose.onNodeWithTag("restaurant-card-1").performClick()
         compose.onNodeWithTag("details-edit").performClick()
         compose.onNodeWithTag("edit-name").performTextReplacement("Saved after check")
-        compose.onNodeWithTag("edit-save").performClick()
+        // Submit a draft with a new photo through the production owner; the fake access
+        // layer pauses it so we can inspect the form during the permission check.
+        compose.runOnIdle {
+            owner.write(RestaurantWrite.EDIT, seed.copy(name = "Saved after check", coverUri = photo))
+        }
         compose.onNodeWithTag("storage-saving").assertIsDisplayed()
         compose.onNodeWithTag("edit-save").assertIsNotEnabled()
         compose.onNodeWithTag("edit-cancel").assertIsNotEnabled()

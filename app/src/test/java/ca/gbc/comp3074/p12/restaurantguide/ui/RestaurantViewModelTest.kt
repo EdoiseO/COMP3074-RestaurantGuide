@@ -103,6 +103,38 @@ class RestaurantViewModelTest {
         assertEquals(1, store.calls)
     }
 
+    @Test fun notesEditUsesSavedPhotosWithoutOpeningThem() = runTest(dispatcher) {
+        val store = ControlledStore(listOf(record))
+        val permissions = UnavailablePhotoGrants()
+        val vm = RestaurantViewModel(store, PhotoWriteCoordinator(permissions)).also { owners += it }
+        runCurrent()
+        vm.write(RestaurantWrite.DETAILS, record.copy(notes = "Edited notes")); runCurrent()
+        assertEquals(RestaurantWrite.DETAILS, vm.state.value.completed)
+        assertNull(vm.state.value.writeError)
+        assertEquals("Edited notes", store.rows.value.single().notes)
+        assertTrue(permissions.opened.isEmpty())
+    }
+
+    @Test fun addChecksPhotosEvenWhenDraftIdMatchesSavedRestaurant() = runTest(dispatcher) {
+        val store = ControlledStore(listOf(record))
+        val permissions = UnavailablePhotoGrants()
+        val vm = RestaurantViewModel(store, PhotoWriteCoordinator(permissions)).also { owners += it }
+        runCurrent()
+        vm.write(RestaurantWrite.ADD, record); runCurrent()
+        assertEquals(RestaurantWriteError.PHOTO_UNAVAILABLE, vm.state.value.writeError)
+        assertNull(vm.state.value.completed)
+        assertEquals(record.photoUris, permissions.opened)
+        assertEquals(0, store.calls)
+    }
+
+    private class UnavailablePhotoGrants : PhotoGrants {
+        val opened = mutableListOf<String>()
+        override suspend fun readable(reference: String): Boolean { opened += reference; return false }
+        override suspend fun persisted() = emptySet<String>()
+        override suspend fun take(reference: String): Boolean = error("Must not request an unreadable photo")
+        override suspend fun release(reference: String) = Unit
+    }
+
     private class ControlledStore(initial: List<Restaurant> = emptyList()) : RestaurantStore {
         val rows = MutableStateFlow(initial)
         var delayEmission = false

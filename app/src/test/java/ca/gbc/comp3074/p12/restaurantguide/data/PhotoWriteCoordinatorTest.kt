@@ -83,14 +83,100 @@ class PhotoWriteCoordinatorTest {
         assertEquals(1, store.allRestaurants.value.size)
     }
 
+    @Test fun notesOnlySaveDoesNotOpenOrRequestAnySavedPhoto() = runTest {
+        val grants = Grants().apply { unreadable = old }
+        val original = record(1, old)
+        val store = Store(listOf(original))
+        val edited = original.copy(notes = "New notes")
+        val result = PhotoWriteCoordinator(grants).commit(store, edited.photoReferences(), 1) { store.update(edited) }
+        assertEquals(edited, store.allRestaurants.value.single())
+        assertTrue(grants.opened.isEmpty())
+        assertTrue(grants.requested.isEmpty())
+        assertFalse(result.sessionOnly)
+    }
+
+    @Test fun captionEditAndMovingSavedCoverIntoAlbumDoNotRecheckAccess() = runTest {
+        val grants = Grants().apply { unreadable = old }
+        val original = record(1, old).copy(photoUris = emptyList(), photoCaptions = emptyList())
+        val store = Store(listOf(original))
+        val edited = original.copy(coverUri = "", photoUris = listOf(old), photoCaptions = listOf("New caption"))
+        PhotoWriteCoordinator(grants).commit(store, edited.photoReferences(), 1) { store.update(edited) }
+        assertEquals(edited, store.allRestaurants.value.single())
+        assertTrue(grants.opened.isEmpty())
+        assertTrue(grants.requested.isEmpty())
+    }
+
+    @Test fun newPhotoIsCheckedWhileUnavailableRetainedPhotoIsIgnored() = runTest {
+        val grants = Grants().apply { unreadable = old }
+        val original = record(1, old)
+        val store = Store(listOf(original))
+        val edited = original.copy(coverUri = photo, photoUris = listOf(old, photo))
+        PhotoWriteCoordinator(grants).commit(store, edited.photoReferences(), 1) { store.update(edited) }
+        assertEquals(listOf(photo), grants.opened)
+        assertEquals(listOf(photo), grants.requested)
+        assertEquals(edited, store.allRestaurants.value.single())
+    }
+
+    @Test fun unavailableNewPhotoStillBlocksSaveWithoutOpeningOldPhoto() = runTest {
+        val grants = Grants().apply { unreadable = photo }
+        val original = record(1, old)
+        val store = Store(listOf(original))
+        val edited = original.copy(photoUris = listOf(old, photo))
+        try {
+            PhotoWriteCoordinator(grants).commit(store, edited.photoReferences(), 1) { store.update(edited) }
+            fail("Expected unavailable new photo")
+        } catch (_: PhotoUnavailableException) { }
+        assertEquals(listOf(photo), grants.opened)
+        assertTrue(grants.requested.isEmpty())
+        assertEquals(original, store.allRestaurants.value.single())
+    }
+
+    @Test fun removingUnavailablePhotoReleasesItsGrantWithoutOpeningIt() = runTest {
+        val grants = Grants().apply { unreadable = old; held += old }
+        val original = record(1, old)
+        val store = Store(listOf(original))
+        val edited = original.copy(coverUri = "", photoUris = emptyList(), photoCaptions = emptyList())
+        PhotoWriteCoordinator(grants).commit(store, emptySet(), 1) { store.update(edited) }
+        assertTrue(grants.opened.isEmpty())
+        assertTrue(grants.requested.isEmpty())
+        assertTrue(grants.held.isEmpty())
+        assertEquals(edited, store.allRestaurants.value.single())
+    }
+
+    @Test fun photoUsedByAnotherRestaurantIsStillNewToThisRestaurant() = runTest {
+        val grants = Grants().apply { unreadable = old; held += old }
+        val original = record(1, photo)
+        val store = Store(listOf(original, record(2, old)))
+        try {
+            PhotoWriteCoordinator(grants).commit(store, setOf(old), 1) { store.update(record(1, old)) }
+            fail("Expected unavailable new reference even with a shared grant")
+        } catch (_: PhotoUnavailableException) { }
+        assertEquals(listOf(old), grants.opened)
+        assertEquals(original, store.allRestaurants.value.first())
+        assertEquals(setOf(old), grants.held)
+    }
+
+    @Test fun newSessionOnlyPhotoWarnsButRetainedSessionPhotoDoesNot() = runTest {
+        val grants = Grants().apply { durable = false; unreadable = old }
+        val store = Store(listOf(record(1, old)))
+        val edited = record(1, old).copy(photoUris = listOf(old, photo))
+        val result = PhotoWriteCoordinator(grants).commit(store, edited.photoReferences(), 1) { store.update(edited) }
+        assertTrue(result.sessionOnly)
+        assertEquals(listOf(photo), grants.opened)
+        assertEquals(listOf(photo), grants.requested)
+        assertEquals(edited, store.allRestaurants.value.single())
+    }
+
     private class Grants : PhotoGrants {
         val held = mutableSetOf<String>()
+        val opened = mutableListOf<String>()
+        val requested = mutableListOf<String>()
         var durable = true
         var unreadable: String? = null
         var failRelease = false
-        override suspend fun readable(reference: String) = reference != unreadable
+        override suspend fun readable(reference: String): Boolean { opened += reference; return reference != unreadable }
         override suspend fun persisted() = held.toSet()
-        override suspend fun take(reference: String): Boolean { if (durable) held += reference; return durable }
+        override suspend fun take(reference: String): Boolean { requested += reference; if (durable) held += reference; return durable }
         override suspend fun release(reference: String) { check(!failRelease); held -= reference }
     }
     private class Store(initial: List<Restaurant> = emptyList()) : RestaurantStore {

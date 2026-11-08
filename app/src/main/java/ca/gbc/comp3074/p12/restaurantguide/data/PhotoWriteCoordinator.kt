@@ -22,13 +22,25 @@ data class PhotoWriteResult<T>(val value: T, val sessionOnly: Boolean)
 class PhotoWriteCoordinator internal constructor(private val grants: PhotoGrants) {
     private val mutex = Mutex()
 
-    suspend fun <T> commit(store: RestaurantStore, references: Set<String>, write: suspend () -> T): PhotoWriteResult<T> =
+    suspend fun <T> commit(
+        store: RestaurantStore,
+        references: Set<String>,
+        savedRestaurantId: Int? = null,
+        write: suspend () -> T,
+    ): PhotoWriteResult<T> =
         mutex.withLock {
             val before = store.allRestaurants.first()
+            // Compare with this saved record, not every restaurant. A new record checks all
+            // its photos even if another restaurant already uses the same reference.
+            val savedReferences = before.firstOrNull { it.id == savedRestaurantId }
+                ?.photoReferences().orEmpty()
+            val addedReferences = references - savedReferences
             val existing = grants.persisted()
             var sessionOnly = false
             try {
-                for (reference in references) {
+                // Retained photos may have been revoked externally. Notes/caption edits must
+                // still save, without reopening or requesting access to those old photos.
+                for (reference in addedReferences) {
                     if (!grants.readable(reference)) throw PhotoUnavailableException()
                     if (reference !in existing && !grants.take(reference)) sessionOnly = true
                 }

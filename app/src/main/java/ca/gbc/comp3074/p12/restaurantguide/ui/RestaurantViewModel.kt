@@ -78,8 +78,12 @@ class RestaurantViewModel(
                         RestaurantWrite.DELETE -> { repository.delete(restaurant); null }
                     }
                 }
-                val result = photoAccess?.commit(repository,
-                    if (kind == RestaurantWrite.DELETE) emptySet() else restaurant.photoReferences(), commit)
+                val result = photoAccess?.commit(
+                    store = repository,
+                    references = if (kind == RestaurantWrite.DELETE) emptySet() else restaurant.photoReferences(),
+                    savedRestaurantId = if (kind == RestaurantWrite.ADD) null else restaurant.id,
+                    write = commit,
+                )
                     ?: PhotoWriteResult(commit(), false)
                 val createdId = result.value
                 // Navigation is allowed only after the durable write. Observation supplies records;
