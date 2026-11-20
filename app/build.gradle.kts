@@ -32,6 +32,8 @@ dependencies {
     implementation("androidx.core:core-splashscreen:1.2.0")
     implementation("androidx.exifinterface:exifinterface:1.4.2")
     implementation(composeBom)
+    // Google Maps SDK for Jetpack Compose
+    implementation("com.google.maps.android:maps-compose:8.4.0")
     implementation("androidx.compose.material3:material3")
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-tooling-preview")
