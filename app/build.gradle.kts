@@ -19,11 +19,12 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
         val localProperties = Properties().apply {
-            load(rootProject.file("local.properties").inputStream())
+            rootProject.file("local.properties").takeIf { it.isFile }?.inputStream()?.use { load(it) }
         }
 
-        manifestPlaceholders["MAPS_API_KEY"] =
-            localProperties.getProperty("MAPS_API_KEY", "")
+        val mapsApiKey = localProperties.getProperty("MAPS_API_KEY", "").trim()
+        manifestPlaceholders["MAPS_API_KEY"] = mapsApiKey
+        buildConfigField("boolean", "MAPS_CONFIGURED", mapsApiKey.isNotEmpty().toString())
     }
 
     compileOptions {
@@ -32,6 +33,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
@@ -42,7 +44,7 @@ dependencies {
     implementation("androidx.exifinterface:exifinterface:1.4.2")
     implementation(composeBom)
     // Google Maps SDK for Jetpack Compose
-    implementation("com.google.maps.android:maps-compose:8.4.0")
+    implementation("com.google.maps.android:maps-compose:6.12.0")
     implementation("androidx.compose.material3:material3")
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-tooling-preview")

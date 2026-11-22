@@ -44,6 +44,13 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.google.android.gms.maps.model.CameraPosition
+import com.google.android.gms.maps.model.LatLng
+import com.google.maps.android.compose.GoogleMap
+import com.google.maps.android.compose.Marker
+import com.google.maps.android.compose.rememberUpdatedMarkerState
+import com.google.maps.android.compose.rememberCameraPositionState
+import ca.gbc.comp3074.p12.restaurantguide.BuildConfig
 import ca.gbc.comp3074.p12.restaurantguide.R
 import ca.gbc.comp3074.p12.restaurantguide.data.Restaurant
 
@@ -52,6 +59,9 @@ import ca.gbc.comp3074.p12.restaurantguide.data.Restaurant
 fun RestaurantMapEntry(restaurant: Restaurant, onBack: () -> Unit) {
     val context = LocalContext.current
     val selectedMap = restaurant.fullMapRes ?: restaurant.mapRes
+    val showTestMap = BuildConfig.MAPS_CONFIGURED &&
+        restaurant.name == "Two Brothers Shawarma" &&
+        restaurant.address == "2324 Lake Shore Blvd W, Etobicoke, ON M8V 1B6"
     var directionsUnavailable by rememberSaveable(restaurant.id) { mutableStateOf(false) }
     BackHandler(onBack = onBack)
 
@@ -74,17 +84,27 @@ fun RestaurantMapEntry(restaurant: Restaurant, onBack: () -> Unit) {
                 Box(Modifier.fillMaxWidth().weight(1f).padding(horizontal = 20.dp)
                     .padding(top = 8.dp, bottom = 12.dp)
                     .clip(RoundedCornerShape(24.dp)).background(Color(0xFFF1F2EF))) {
-                    RestaurantMapPreview(
-                        restaurant.copy(mapRes = selectedMap),
-                        Modifier.fillMaxSize().testTag("full-map-preview"),
-                        showPreviewLabel = false,
-                    )
-                    Surface(Modifier.align(Alignment.TopEnd).padding(12.dp),
-                        shape = RoundedCornerShape(12.dp), color = Color.White,
-                        border = BorderStroke(1.dp, Color(0xFFE7E0EC))) {
-                        Text(stringResource(R.string.details_map_preview_label),
-                            Modifier.padding(horizontal = 10.dp, vertical = 6.dp).testTag("map-static-label"),
-                            color = Color(0xFF4F378A), style = MaterialTheme.typography.labelMedium)
+                    if (showTestMap) {
+                        val location = LatLng(43.6172762, -79.4877795)
+                        val camera = rememberCameraPositionState {
+                            position = CameraPosition.fromLatLngZoom(location, 16f)
+                        }
+                        GoogleMap(modifier = Modifier.fillMaxSize().testTag("full-map-live"), cameraPositionState = camera) {
+                            Marker(state = rememberUpdatedMarkerState(position = location), title = restaurant.name)
+                        }
+                    } else {
+                        RestaurantMapPreview(
+                            restaurant.copy(mapRes = selectedMap),
+                            Modifier.fillMaxSize().testTag("full-map-preview"),
+                            showPreviewLabel = false,
+                        )
+                        Surface(Modifier.align(Alignment.TopEnd).padding(12.dp),
+                            shape = RoundedCornerShape(12.dp), color = Color.White,
+                            border = BorderStroke(1.dp, Color(0xFFE7E0EC))) {
+                            Text(stringResource(R.string.details_map_preview_label),
+                                Modifier.padding(horizontal = 10.dp, vertical = 6.dp).testTag("map-static-label"),
+                                color = Color(0xFF4F378A), style = MaterialTheme.typography.labelMedium)
+                        }
                     }
                 }
                 Surface(Modifier.fillMaxWidth().padding(horizontal = 20.dp).padding(bottom = 16.dp),
