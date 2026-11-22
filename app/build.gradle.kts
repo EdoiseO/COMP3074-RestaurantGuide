@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.plugin.compose")
@@ -15,6 +17,14 @@ android {
         versionCode = 1
         versionName = "0.1"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        val localProperties = Properties().apply {
+            rootProject.file("local.properties").takeIf { it.isFile }?.inputStream()?.use { load(it) }
+        }
+
+        val mapsApiKey = localProperties.getProperty("MAPS_API_KEY", "").trim()
+        manifestPlaceholders["MAPS_API_KEY"] = mapsApiKey
+        buildConfigField("boolean", "MAPS_CONFIGURED", mapsApiKey.isNotEmpty().toString())
     }
 
     compileOptions {
@@ -23,6 +33,7 @@ android {
     }
     buildFeatures {
         compose = true
+        buildConfig = true
     }
 }
 
@@ -32,6 +43,8 @@ dependencies {
     implementation("androidx.core:core-splashscreen:1.2.0")
     implementation("androidx.exifinterface:exifinterface:1.4.2")
     implementation(composeBom)
+    // Google Maps SDK for Jetpack Compose
+    implementation("com.google.maps.android:maps-compose:6.12.0")
     implementation("androidx.compose.material3:material3")
     implementation("androidx.compose.ui:ui")
     implementation("androidx.compose.ui:ui-tooling-preview")
